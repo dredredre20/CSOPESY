@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include <string>
 
 class ASCIIart{
@@ -22,7 +23,7 @@ class MainMenu{
         void welcomeMenu(){
             ASCIIart ascii;
             ascii.printASCIIart();
-            std::cout << "Hello, Welcome to CSOPESY commandline!";
+            std::cout << "\nHello, Welcome to CSOPESY commandline!";
             std::cout << "\nType 'exit' to quit, 'clear' to clear screen";
             std::cout << "\n\n** IMPORTANT: Type 'initialize' to load config and start system **\n";
         } 
@@ -45,15 +46,15 @@ class CommandManager{
             std::getline(std::cin, command);
 
             if (command == "initialize"){
-                std::cout << command << "command recognized. Doing something.";
+                std::cout << command << " command recognized. Doing something.";
             } else if (command == "screen"){
-                std::cout << command << "command recognized. Doing something.";
+                std::cout << command << " command recognized. Doing something.";
             } else if (command == "scheduler-start"){
-                std::cout << command << "command recognized. Doing something.";
+                std::cout << command << " command recognized. Doing something.";
             } else if (command == "scheduler-stop"){
-                std::cout << command << "command recognized. Doing something.";
+                std::cout << command << " command recognized. Doing something.";
             } else if (command == "report-util"){
-                std::cout << command << "command recognized. Doing something.";
+                std::cout << command << " command recognized. Doing something.";
             } else if (command == "clear"){
                 std::cout << "\033[2J\033[1;1H";    
                 printMenu();
