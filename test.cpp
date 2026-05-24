@@ -1,20 +1,14 @@
 #include <iostream>
-#include <cstring>
 #include <string>
 
 class ASCIIart{
     public:
-        void printASCIIart(){
-            char buffer[5][45];
-            strcpy(buffer[0], "  ____ ____   ___  ____  _____ ______   __");
-            strcpy(buffer[1], " / ___/ ___| / _ \\|    \\| ____/ ___\\ | / /");
-            strcpy(buffer[2], "| |   \\___ \\| | | | |_) |  _| \\___ \\\\ V /");
-            strcpy(buffer[3], "| |___ ___) | |_| |  __/| |___ ___) || |  ");
-            strcpy(buffer[4], " \\____|____/ \\___/|_|   |_____|____/ |_|  ");
-
-            for (int i = 0; i < 5; i++) {
-                printf("%s\n", buffer[i]);
-            }
+        void printASCIIart() {
+            std::cout << "  ____ ____   ___  ____  _____ ______   __\n";
+            std::cout << " / ___/ ___| / _ \\|    \\| ____/ ___\\ | / /\n";
+            std::cout << "| |   \\___ \\| | | | |_) |  _| \\___ \\\\ V / \n";
+            std::cout << "| |___ ___) | |_| |  __/| |___ ___) || |  \n";
+            std::cout << " \\____|____/ \\___/|_|   |_____|____/ |_|  \n";
         }
 };
 
@@ -56,12 +50,11 @@ class CommandManager{
             } else if (command == "report-util"){
                 std::cout << command << " command recognized. Doing something.";
             } else if (command == "clear"){
-                std::cout << "\033[2J\033[1;1H";    
+                std::cout << "\033[2J\033[1;1H"; // Clears screen and moves cursor to top-left
                 printMenu();
             
             } else if (command == "exit"){
                 flag = false;
-                exit(0);
             } else {
                 std::cout << "Unknown command. Try again";
             }
@@ -70,11 +63,14 @@ class CommandManager{
         }
 };
 
-int main(){
+int main() {
     printMenu();
     CommandManager cmdManager;
 
-    while (cmdManager.processCommand()){
-
+    // The loop runs until processCommand() returns false
+    while (cmdManager.processCommand()) {
+        // Loop continues
     }
+
+    return 0;
 }
