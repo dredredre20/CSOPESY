@@ -4,7 +4,16 @@
 class ASCIIart{
     public:
         void printASCIIart(){
-            // CSOPESY
+            char buffer[5][45];
+            strcpy(buffer[0], "  ____ ____   ___  ____  _____ ______   __");
+            strcpy(buffer[1], " / ___/ ___| / _ \\|    \\| ____/ ___\\ | / /");
+            strcpy(buffer[2], "| |   \\___ \\| | | | |_) |  _| \\___ \\\\ V /");
+            strcpy(buffer[3], "| |___ ___) | |_| |  __/| |___ ___) || |  ");
+            strcpy(buffer[4], " \\____|____/ \\___/|_|   |_____|____/ |_|  ");
+
+            for (int i = 0; i < 5; i++) {
+                printf("%s\n", buffer[i]);
+            }
         }
 };
 
