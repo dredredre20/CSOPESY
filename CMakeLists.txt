@@ -20,7 +20,7 @@ set(IMGUI_SOURCES
 add_executable(${PROJECT_NAME}
     main.cpp
     ${IMGUI_SOURCES}
- "desktop/desktop.cpp")
+ "UI_Elements/desktop.cpp" "UI_Elements/taskbar.cpp" "UI_Elements/UIConfig.cpp")
 
 # For Mac
 if(APPLE)

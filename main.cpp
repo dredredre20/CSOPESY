@@ -3,7 +3,8 @@
 #include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 #include <cstdio>
-#include "desktop/desktop.hpp"
+#include "UI_Elements/desktop.hpp"
+#include "UI_Elements/taskbar.hpp"
 
 int main()
 {
@@ -51,6 +52,8 @@ int main()
     printf("[OK] Dear ImGui initialized\n");
 
     Desktop desktop;
+    Taskbar taskbar;
+   //taskbar.initialize();
 
     // Kernel initialization
     // Start system services
@@ -65,6 +68,8 @@ int main()
 
         // Update application logic
         // Render all UI components
+        taskbar.draw();
+
 		desktop.renderDesktop(window);
         ImGui::Render(); // finalize
 
