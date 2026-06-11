@@ -3,20 +3,28 @@
 #include <ctime>
 #include <string>
 #include <chrono>
-
 #include "desktop.hpp"
 #include "imgui.h"
 
 using namespace std;
 
 void Desktop::drawClock() {
-    auto now = chrono::system_clock::now();
-    auto time = chrono::system_clock::to_time_t(now);
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &time);
-
     char buffer[64];
-    strftime(buffer, sizeof(buffer), "%I:%M:%S %p |  %a, %b %d %Y", &timeinfo);
+
+    #ifdef __APPLE__
+        const auto present_datetime = chrono::system_clock::now();
+        time_t t = chrono::system_clock::to_time_t(present_datetime); // convert precise time point to c-style
+        struct tm timeinfo;
+        localtime_r(&t,&timeinfo);
+        std::strftime(buffer, sizeof(buffer), "%I:%M:%S %p |  %a, %b %d %Y", &timeinfo);
+
+    #else
+        auto now = chrono::system_clock::now();
+        auto time = chrono::system_clock::to_time_t(now);
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &time);
+        strftime(buffer, sizeof(buffer), "%I:%M:%S %p |  %a, %b %d %Y", &timeinfo);
+    #endif
 
     ImGui::SetWindowFontScale(1.5f); // increase font size
     ImVec2 textSize = ImGui::CalcTextSize(buffer);
