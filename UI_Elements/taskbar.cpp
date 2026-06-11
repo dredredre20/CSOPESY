@@ -66,6 +66,24 @@ void Taskbar::draw() {
 void Taskbar::drawSystemTray() {
     ImGui::SameLine(ImGui::GetWindowWidth() - 200);
 
+    // temporary
+    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "FOLDER");
+    ImGui::SameLine();
+
+    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "INIT");
+    ImGui::SameLine();
+
+    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "START");
+    ImGui::SameLine();
+
+    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "STOP");
+    ImGui::SameLine();
+    
+    ImGui::TextColored(ImVec4(1, 1, 1, 1), "IMG");
+    ImGui::SameLine();
+    
+    ImGui::TextColored(ImVec4(1, 1, 1, 1), "SRCH");
+    ImGui::SameLine();
     
     ImGui::TextColored(ImVec4(1, 1, 1, 1), "VOL");
     ImGui::SameLine();
