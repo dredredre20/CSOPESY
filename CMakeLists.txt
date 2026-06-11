@@ -20,7 +20,7 @@ set(IMGUI_SOURCES
 add_executable(${PROJECT_NAME}
     main.cpp
     ${IMGUI_SOURCES}
-)
+ "desktop/desktop.cpp")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${IMGUI_DIR}"

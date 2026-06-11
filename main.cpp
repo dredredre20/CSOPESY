@@ -3,6 +3,7 @@
 #include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 #include <cstdio>
+#include "desktop/desktop.hpp"
 
 int main()
 {
@@ -32,6 +33,8 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
     printf("[OK] Dear ImGui initialized\n");
 
+    Desktop desktop;
+
     // Kernel initialization
     // Start system services
 
@@ -45,6 +48,7 @@ int main()
 
         // Update application logic
         // Render all UI components
+		desktop.renderDesktop(window);
         ImGui::Render(); // finalize
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
