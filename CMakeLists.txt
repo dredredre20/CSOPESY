@@ -22,10 +22,19 @@ add_executable(${PROJECT_NAME}
     ${IMGUI_SOURCES}
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    "${IMGUI_DIR}"
-    "${GLFW_ROOT}/include"
-)
+# For Mac
+if(APPLE)
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        "${IMGUI_DIR}"
+        "/opt/homebrew/include"
+    )
+# For Windows
+else()
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        "${IMGUI_DIR}"
+        "${GLFW_ROOT}/include"
+    )
+endif()
 
 if (MSVC)
     set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -33,13 +42,25 @@ if (MSVC)
     )
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    "${GLFW_ROOT}/glfw3.lib"
-    opengl32.lib
-    gdi32.lib
-    imm32.lib
-    dwmapi.lib
-)
+# For mac
+if(APPLE)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "-framework OpenGL"
+        "-framework Cocoa"
+        "-framework IOKit"
+        "-framework CoreVideo"
+        "/opt/homebrew/lib/libglfw.3.dylib"
+    )
+# For windows
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "${GLFW_ROOT}/glfw3.lib"
+        opengl32.lib
+        gdi32.lib
+        imm32.lib
+        dwmapi.lib
+    )
+endif()
 
 # Comment this out during development to allow the console to be visible for debugging purposes
 #set_target_properties(${PROJECT_NAME} PROPERTIES

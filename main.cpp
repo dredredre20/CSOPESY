@@ -6,9 +6,26 @@
 
 int main()
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    if (!glfwInit())
+    {
+        printf("[ERROR] glfwInit() failed\n");
+        return -1;
+    }
+
+    // --- CROSS-PLATFORM OPENGL SETUP ---
+    #ifdef __APPLE__
+        // macOS strictly requires OpenGL 3.3 Core Profile + Forward Compatibility
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #else
+        // Windows/Linux setup
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #endif
+    // ------------------------------------
 
     GLFWwindow* window = glfwCreateWindow(960, 540, "CSOPESY Desktop OS Emulator", nullptr, nullptr);
     if (!window)
@@ -47,7 +64,7 @@ int main()
         // Render all UI components
         ImGui::Render(); // finalize
 
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
 
