@@ -68,6 +68,10 @@ else()
     )
 endif()
 
+if(MSVC)
+    add_compile_options(/ZI)
+endif()
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_SOURCE_DIR}/assets"

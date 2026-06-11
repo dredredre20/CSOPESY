@@ -39,15 +39,20 @@ GLuint loadTexture(const char* filename) {
     return textureID;
 }
 
-void Taskbar::initialize() {
+void Taskbar::initialize(GLFWwindow* window) {
     GLuint filesIcon = loadTexture("assets/folder.png");
+    GLuint taskManagerIcon = loadTexture("assets/task_manager.png");
 
     taskbarIcons = {
         { "Files",  filesIcon, ImVec4(1,1,1,1), []() { /* open file browser */ } },
         { "INIT",   0, ImVec4(0.4f, 0.8f, 1.0f, 1), []() { /* init action */ } },
         { "START",  0, ImVec4(0.4f, 0.9f, 0.4f, 1), []() { /* start action */ } },
         { "STOP",   0, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } },
+        { "TASKMANAGER",   taskManagerIcon, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } }, // replace with image
         { "SRCH",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
+        { "VOL",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
+        { "NET",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
+        { "PWR",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), [window]() { glfwSetWindowShouldClose(window, GLFW_TRUE); } },
     };
 }
 
@@ -65,34 +70,66 @@ void Taskbar::draw() {
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoScrollbar);
 
+    int iconCount = (int)taskbarIcons.size();
+    float spacing = 10.0f;
+
+    // set size for buttons
+    float maxButtonWidth = 80.0f * UIConfig::getScaleFactor();
+
+    // dynamic resizing accounting for the display size
+    float totalSpacing = spacing * (iconCount + 1);
+    float dynamicWidth = (displaySize.x - totalSpacing) / iconCount;
+    float buttonWidth = (dynamicWidth > maxButtonWidth) ? maxButtonWidth : dynamicWidth;
+    float buttonHeight = taskbarHeight - 10.0f;
+
+    ImVec2 btnSize(buttonWidth, buttonHeight);
+    ImGui::SetWindowFontScale(1.5f);
     // Render icons
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 0));
-    // initialize();
-    for (auto& icon : taskbarIcons) {
-        // If the icon has an image (texture), execute
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, 0));
+
+    // left corner buttons
+    for (int i = 0; i < iconCount - 3; i++) {
+        auto& icon = taskbarIcons[i];
         if (icon.texture) {
-            if (ImGui::ImageButton(
-                icon.name.c_str(),                          // unique string ID
-                (ImTextureID)(intptr_t)icon.texture,        // texture ID
-                ImVec2(40, 40) * UIConfig::getScaleFactor() // size
-            )) {
+            if (ImGui::ImageButton(icon.name.c_str(), (ImTextureID)(intptr_t)icon.texture, btnSize)) {
                 icon.onClick();
             }
-            if (ImGui::IsItemHovered()) {
-                ImGui::SetTooltip("%s", icon.name.c_str());
-            }
-        } 
-        // Otherwise, 
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", icon.name.c_str());
+        }
         else {
-            if (ImGui::Button(icon.name.c_str(), ImVec2(60, 40) * UIConfig::getScaleFactor())) {
+            if (ImGui::Button(icon.name.c_str(), btnSize)) {
                 icon.onClick();
             }
         }
         ImGui::SameLine();
     }
-    
+
+    // right corner buttons calculator
+    float rightGroupWidth = (buttonWidth * 3) + (spacing * 3);
+    float rightStartPosX = displaySize.x - rightGroupWidth;
+
+    // force imgui to go to specified coordinate
+    ImGui::SetCursorPosX(rightStartPosX);
+
+    for (int i = iconCount - 3; i < iconCount; i++) {
+        auto& icon = taskbarIcons[i];
+        if (icon.texture) {
+            if (ImGui::ImageButton(icon.name.c_str(), (ImTextureID)(intptr_t)icon.texture, btnSize)) {
+                icon.onClick();
+            }
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", icon.name.c_str());
+        }
+        else {
+            if (ImGui::Button(icon.name.c_str(), btnSize)) {
+                icon.onClick();
+            }
+        }
+        if (i < iconCount - 1) {
+            ImGui::SameLine();
+        }
+    }
 
     ImGui::PopStyleVar();
-
+    ImGui::SetWindowFontScale(1.0f);
     ImGui::End();
 }

@@ -14,7 +14,7 @@ struct TaskbarIcon {
 
 class Taskbar {
 public:
-    void initialize();
+    void initialize(GLFWwindow* window);
     void draw();
 
 private:

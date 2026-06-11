@@ -53,7 +53,7 @@ int main()
 
     Desktop desktop;
     Taskbar taskbar;
-    taskbar.initialize();
+    taskbar.initialize(window);
 
     // Kernel initialization
     // Start system services
