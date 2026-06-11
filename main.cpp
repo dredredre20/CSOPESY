@@ -53,7 +53,7 @@ int main()
 
     Desktop desktop;
     Taskbar taskbar;
-   //taskbar.initialize();
+    taskbar.initialize();
 
     // Kernel initialization
     // Start system services
@@ -68,9 +68,8 @@ int main()
 
         // Update application logic
         // Render all UI components
-        taskbar.draw();
-
 		desktop.renderDesktop(window);
+        taskbar.draw();
         ImGui::Render(); // finalize
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

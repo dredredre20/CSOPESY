@@ -17,10 +17,16 @@ set(IMGUI_SOURCES
     "${IMGUI_DIR}/imgui_impl_opengl3.cpp"
 )
 
+
+
 add_executable(${PROJECT_NAME}
     main.cpp
     ${IMGUI_SOURCES}
  "UI_Elements/desktop.cpp" "UI_Elements/taskbar.cpp" "UI_Elements/UIConfig.cpp")
+
+if(APPLE)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)
+endif()
 
 # For Mac
 if(APPLE)
@@ -61,6 +67,12 @@ else()
         dwmapi.lib
     )
 endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/assets"
+    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+)
 
 # Comment this out during development to allow the console to be visible for debugging purposes
 #set_target_properties(${PROJECT_NAME} PROPERTIES

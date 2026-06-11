@@ -1,23 +1,53 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
+#define STB_IMAGE_IMPLEMENTATION
 
 #include <GLFW/glfw3.h>
 #include <cstdio>
 #include <ctime>
 #include <string>
 #include <chrono>
-
 #include  "taskbar.hpp"
 #include "imgui.h"
 #include "UIConfig.hpp"
+#include "stb_image.h" // for processing images
+#include <stdio.h>
+
+// Helper function to load an image file and returns an OpenGL Texture ID
+GLuint loadTexture(const char* filename) {
+    int width, height, channels;
+    // Load image data from disk
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4); 
+    if (data == nullptr) {
+        printf("Hello");
+        return 0;
+    }
+
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Set texture wrapping and filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Upload the raw pixel data into the GPU
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    // Free the CPU memory since it's safely copied to the GPU now
+    stbi_image_free(data);
+
+    return textureID;
+}
 
 void Taskbar::initialize() {
+    GLuint filesIcon = loadTexture("assets/folder.png");
+
     taskbarIcons = {
-        //{ "Files",  loadTexture("folder.png"), ImVec4(1,1,1,1), []() { /* open file browser */ } },
-        { "INIT",   nullptr, ImVec4(0.4f, 0.8f, 1.0f, 1), []() { /* init action */ } },
-        { "START",  nullptr, ImVec4(0.4f, 0.9f, 0.4f, 1), []() { /* start action */ } },
-        { "STOP",   nullptr, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } },
-       // { "Graph",  loadTexture("graph.png"), ImVec4(1,1,1,1), []() { /* toggle graph */ } },
-        { "SRCH",   nullptr, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
+        { "Files",  filesIcon, ImVec4(1,1,1,1), []() { /* open file browser */ } },
+        { "INIT",   0, ImVec4(0.4f, 0.8f, 1.0f, 1), []() { /* init action */ } },
+        { "START",  0, ImVec4(0.4f, 0.9f, 0.4f, 1), []() { /* start action */ } },
+        { "STOP",   0, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } },
+        { "SRCH",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
     };
 }
 
@@ -39,6 +69,7 @@ void Taskbar::draw() {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 0));
     // initialize();
     for (auto& icon : taskbarIcons) {
+        // If the icon has an image (texture), execute
         if (icon.texture) {
             if (ImGui::ImageButton(
                 icon.name.c_str(),                          // unique string ID
@@ -50,6 +81,12 @@ void Taskbar::draw() {
             if (ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("%s", icon.name.c_str());
             }
+        } 
+        // Otherwise, 
+        else {
+            if (ImGui::Button(icon.name.c_str(), ImVec2(60, 40) * UIConfig::getScaleFactor())) {
+                icon.onClick();
+            }
         }
         ImGui::SameLine();
     }
@@ -57,40 +94,5 @@ void Taskbar::draw() {
 
     ImGui::PopStyleVar();
 
-    // System tray (right side)
-    drawSystemTray();
-
     ImGui::End();
-}
-
-void Taskbar::drawSystemTray() {
-    ImGui::SameLine(ImGui::GetWindowWidth() - 200);
-
-    // temporary
-    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "FOLDER");
-    ImGui::SameLine();
-
-    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "INIT");
-    ImGui::SameLine();
-
-    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "START");
-    ImGui::SameLine();
-
-    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "STOP");
-    ImGui::SameLine();
-    
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), "IMG");
-    ImGui::SameLine();
-    
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), "SRCH");
-    ImGui::SameLine();
-    
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), "VOL");
-    ImGui::SameLine();
-
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), "NET");
-    ImGui::SameLine();
-
-    ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1), "PWR");
-   
 }
