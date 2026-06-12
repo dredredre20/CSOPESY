@@ -28,6 +28,7 @@ add_executable(${PROJECT_NAME}
     "UI_Elements/AWindow.cpp"
     "UI_Elements/UIManager.cpp"
     "UI_Elements/Windows.cpp"
+    "UI_Elements/TaskManager.cpp"
 
  "LoadTexture/stb_image.h" "LoadTexture/loadTexture.cpp")
 

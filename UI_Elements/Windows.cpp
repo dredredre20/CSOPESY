@@ -1,4 +1,5 @@
 #include "Windows.hpp"
+#include "TaskManager.hpp"
 #include "imgui.h"
 
 
@@ -46,13 +47,22 @@ TaskManagerWindow::TaskManagerWindow() : AWindow("Task Manager") {}
 
 void TaskManagerWindow::update() {}
 
-
-// Component 3 - a window that closely resembles the Windows task manager
 void TaskManagerWindow::draw() {
+    TaskManager taskManager;
     ImGui::SetNextWindowSize(ImVec2(800.0f, 550.0f), ImGuiCond_FirstUseEver);
 
     if (beginWindow()){
-        // Implementation
+        if (ImGui::BeginTabBar("TaskManagerTabs")) {
+            if (ImGui::BeginTabItem("Performance")) {
+                taskManager.drawPerformanceTab();
+                ImGui::EndTabItem();
+            }
+			if (ImGui::BeginTabItem("Processes")) {
+				taskManager.drawProcessesTab();
+				ImGui::EndTabItem();
+			}
+            ImGui::EndTabBar();
+        }
     }
 
     endWindow();
