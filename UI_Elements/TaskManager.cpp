@@ -7,10 +7,10 @@ TaskManager::TaskManager() {
 	// Dummy processes
 	processes = {
 		{ 1024, "explorer.exe", "Running", 2.3f, 145.2f },
-		{ 1024, "csopesy.exe", "Running", 12.7f, 210.5f },
-		{ 1024, "chrome.exe", "Running", 18.4f, 890.3f },
-		{ 1024, "vscode.exe", "Running", 1.2f, 410.9f },
-		{ 1024, "discord.exe", "Running", 4.1f, 320.7f },
+		{ 3088, "csopesy.exe", "Running", 12.7f, 210.5f },
+		{ 9776, "chrome.exe", "Running", 18.4f, 890.3f },
+		{ 2348, "vscode.exe", "Running", 1.2f, 410.9f },
+		{ 7032, "discord.exe", "Running", 4.1f, 320.7f },
 	};
 }
 
