@@ -3,5 +3,6 @@ class Desktop {
 		
 		void renderDesktop(GLFWwindow* window);
 		void drawClock();
+		void loadWallpaper(const char* path);
 		
 };

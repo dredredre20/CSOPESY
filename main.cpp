@@ -55,6 +55,7 @@ int main()
 
     Desktop desktop;
     Taskbar taskbar;
+    desktop.loadWallpaper("assets/trees.png"); // feel free to change this
     taskbar.initialize(window);
 
     // Register windows with the UIManager

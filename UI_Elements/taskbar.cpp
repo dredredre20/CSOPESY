@@ -9,37 +9,12 @@
 #include  "taskbar.hpp"
 #include "imgui.h"
 #include "UIConfig.hpp"
-#include "stb_image.h" // for processing images
+#include "../LoadTexture/loadTexture.hpp"
 #include <stdio.h>
 #include "UIManager.hpp" 
 
-// Helper function to load an image file and returns an OpenGL Texture ID
-GLuint loadTexture(const char* filename) {
-    int width, height, channels;
-    // Load image data from disk
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4); 
-    if (data == nullptr) {
-        printf("Hello");
-        return 0;
-    }
 
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    // Set texture wrapping and filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Upload the raw pixel data into the GPU
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-    // Free the CPU memory since it's safely copied to the GPU now
-    stbi_image_free(data);
-
-    return textureID;
-}
-
+// initialize buttons with icons, colors, and click actions
 void Taskbar::initialize(GLFWwindow* window) {
     GLuint filesIcon = loadTexture("assets/folder.png");
     GLuint taskManagerIcon = loadTexture("assets/task_manager.png");
@@ -52,14 +27,18 @@ void Taskbar::initialize(GLFWwindow* window) {
             UIManager::getInstance().showWindow("Initialize");
         } },
         { "START",  0, ImVec4(0.4f, 0.9f, 0.4f, 1), []() { /* start action */ } },
-        { "STOP",   0, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } },
+        { "STOP",   0, ImVec4(1.0f, 0.3f, 0.3f, 1.0f), []() { /* stop action */ } },
+
         { "TASKMANAGER",   taskManagerIcon, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { 
             UIManager::getInstance().showWindow("Task Manager");
         } },
         { "SRCH",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
         { "VOL",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
         { "NET",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
-        { "PWR",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), [window]() { glfwSetWindowShouldClose(window, GLFW_TRUE); } },
+
+        { "PWR",   0, ImVec4(1.0f, 0.3f, 0.3f, 1.0f), [window]() {
+            glfwSetWindowShouldClose(window, GLFW_TRUE); 
+        } }
     };
 }
 
@@ -104,9 +83,11 @@ void Taskbar::draw() {
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", icon.name.c_str());
         }
         else {
+            ImGui::PushStyleColor(ImGuiCol_Button, icon.color);
             if (ImGui::Button(icon.name.c_str(), btnSize)) {
                 icon.onClick();
             }
+            ImGui::PopStyleColor();
         }
         ImGui::SameLine();
     }
@@ -127,9 +108,11 @@ void Taskbar::draw() {
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", icon.name.c_str());
         }
         else {
+            ImGui::PushStyleColor(ImGuiCol_Button, icon.color);
             if (ImGui::Button(icon.name.c_str(), btnSize)) {
                 icon.onClick();
             }
+            ImGui::PopStyleColor();
         }
         if (i < iconCount - 1) {
             ImGui::SameLine();

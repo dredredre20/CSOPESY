@@ -29,7 +29,7 @@ add_executable(${PROJECT_NAME}
     "UI_Elements/UIManager.cpp"
     "UI_Elements/Windows.cpp"
 
-)
+ "LoadTexture/stb_image.h" "LoadTexture/loadTexture.cpp")
 
 
 if(APPLE)

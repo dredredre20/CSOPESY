@@ -5,6 +5,7 @@
 #include <chrono>
 #include "desktop.hpp"
 #include "imgui.h"
+#include "../LoadTexture/loadTexture.hpp"
 
 using namespace std;
 
@@ -31,10 +32,29 @@ void Desktop::drawClock() {
     ImVec2 pos = ImVec2(ImGui::GetIO().DisplaySize.x - textSize.x - 20, 20);
 
     ImGui::SetCursorPos(pos);
-    ImGui::TextColored(ImVec4(1, 1, 1, 1), "%s", buffer);
+    ImGui::TextColored(ImVec4(0.9f, 0.45f, 0.0f, 1.0f), "%s", buffer);
 
     ImGui::SetWindowFontScale(1.0f); // reset for other elements
 }
+
+
+GLuint wallpaperTexture = 0;
+
+void Desktop::loadWallpaper(const char* path) {
+	if (wallpaperTexture) {
+		glDeleteTextures(1, &wallpaperTexture);
+		wallpaperTexture = 0;
+	}
+	wallpaperTexture = loadTexture(path);
+
+	if (wallpaperTexture) {
+		printf("[OK] Wallpaper loaded: %s\n", path);
+	}
+	else {
+		printf("[ERROR] Failed to load wallpaper: %s\n", path);
+	}
+}
+
 
 void Desktop::renderDesktop(GLFWwindow* window)
 {
@@ -56,14 +76,17 @@ void Desktop::renderDesktop(GLFWwindow* window)
         ImGuiWindowFlags_NoBackground;
     ImGui::Begin("Desktop", nullptr, flags);
 
-    // initial wallpaper design (no image yet)
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 p0 = ImGui::GetWindowPos();
     ImVec2 p1 = ImVec2(p0.x + displaySize.x, p0.y + displaySize.y);
 
-    ImU32 colTop = IM_COL32(30, 60, 110, 255);
-    ImU32 colBottom = IM_COL32(10, 20, 40, 255);
-    drawList->AddRectFilledMultiColor(p0, p1, colTop, colTop, colBottom, colBottom);
+    if (wallpaperTexture) {
+        drawList->AddImage((void*)(intptr_t)wallpaperTexture, p0, p1);
+    } else {
+        ImU32 colTop = IM_COL32(30, 60, 110, 255);
+        ImU32 colBottom = IM_COL32(10, 20, 40, 255);
+        drawList->AddRectFilledMultiColor(p0, p1, colTop, colTop, colBottom, colBottom);
+    }
 
 	// display date and time in the top-right corner
     drawClock();
