@@ -11,6 +11,7 @@
 #include "UIConfig.hpp"
 #include "stb_image.h" // for processing images
 #include <stdio.h>
+#include "UIManager.hpp" 
 
 // Helper function to load an image file and returns an OpenGL Texture ID
 GLuint loadTexture(const char* filename) {
@@ -44,11 +45,17 @@ void Taskbar::initialize(GLFWwindow* window) {
     GLuint taskManagerIcon = loadTexture("assets/task_manager.png");
 
     taskbarIcons = {
-        { "Files",  filesIcon, ImVec4(1,1,1,1), []() { /* open file browser */ } },
-        { "INIT",   0, ImVec4(0.4f, 0.8f, 1.0f, 1), []() { /* init action */ } },
+        { "Files",  filesIcon, ImVec4(1,1,1,1), []() { 
+            UIManager::getInstance().showWindow("File Browser");
+        }},
+        { "INIT",   0, ImVec4(0.4f, 0.8f, 1.0f, 1), []() { 
+            UIManager::getInstance().showWindow("Initialize");
+        } },
         { "START",  0, ImVec4(0.4f, 0.9f, 0.4f, 1), []() { /* start action */ } },
         { "STOP",   0, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } },
-        { "TASKMANAGER",   taskManagerIcon, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { /* stop action */ } }, // replace with image
+        { "TASKMANAGER",   taskManagerIcon, ImVec4(0.9f, 0.4f, 0.4f, 1), []() { 
+            UIManager::getInstance().showWindow("Task Manager");
+        } },
         { "SRCH",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
         { "VOL",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },
         { "NET",   0, ImVec4(0.7f, 0.4f, 0.9f, 1), []() { /* search action */ } },

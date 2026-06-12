@@ -22,7 +22,15 @@ set(IMGUI_SOURCES
 add_executable(${PROJECT_NAME}
     main.cpp
     ${IMGUI_SOURCES}
- "UI_Elements/desktop.cpp" "UI_Elements/taskbar.cpp" "UI_Elements/UIConfig.cpp")
+    "UI_Elements/desktop.cpp" 
+    "UI_Elements/taskbar.cpp" 
+    "UI_Elements/UIConfig.cpp"
+    "UI_Elements/AWindow.cpp"
+    "UI_Elements/UIManager.cpp"
+    "UI_Elements/Windows.cpp"
+
+)
+
 
 if(APPLE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)

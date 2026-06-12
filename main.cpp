@@ -5,6 +5,8 @@
 #include <cstdio>
 #include "UI_Elements/desktop.hpp"
 #include "UI_Elements/taskbar.hpp"
+#include "UI_Elements/UIManager.hpp"
+#include "UI_Elements/Windows.hpp"
 
 int main()
 {
@@ -55,6 +57,12 @@ int main()
     Taskbar taskbar;
     taskbar.initialize(window);
 
+    // Register windows with the UIManager
+    UIManager::getInstance().registerWindow("File Browser", std::make_shared<FileBrowserWindow>());
+    UIManager::getInstance().registerWindow("Initialize", std::make_shared<InitWindow>());
+    UIManager::getInstance().registerWindow("Task Manager", std::make_shared<TaskManagerWindow>());
+
+
     // Kernel initialization
     // Start system services
 
@@ -66,12 +74,17 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Update application logic
-        // Render all UI components
-		desktop.renderDesktop(window);
+        // draw the underlying OS canvas layer
+        desktop.renderDesktop(window);
+        
+        // draw the taskbar
         taskbar.draw();
-        ImGui::Render(); // finalize
+        
+        // render active layers
+        UIManager::getInstance().updateAllWindows();
+        UIManager::getInstance().renderAllWindows();
 
+        ImGui::Render(); 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
