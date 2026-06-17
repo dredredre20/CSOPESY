@@ -45,8 +45,15 @@ class CommandManager{
                 std::cout << command << " command recognized. Doing something.";
             } else if (command == "scheduler-start"){
                 std::cout << command << " command recognized. Doing something.";
+            } else if (command == "scheduler-test") {
+                /* if (timestamp is 0.5 seconds ago) {
+                    // Create x processes to be added to your scheduler ready queue every 0.5 seconds
+                } */
             } else if (command == "scheduler-stop"){
                 std::cout << command << " command recognized. Doing something.";
+                // batch_scheduler_enabled = false
+            } else if (command == "screen -s") {
+                // Create a process to be added to your scheduler ready queue
             } else if (command == "report-util"){
                 std::cout << command << " command recognized. Doing something.";
             } else if (command == "clear"){
@@ -66,6 +73,8 @@ class CommandManager{
 int main() {
     printMenu();
     CommandManager cmdManager;
+
+    // Batch_scheduler_enabled
 
     // The loop runs until processCommand() returns false
     while (cmdManager.processCommand()) {
