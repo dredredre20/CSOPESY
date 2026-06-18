@@ -1,5 +1,11 @@
+#include "FCFSScheduler.h"
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <cstdlib>
+#include <vector>
+
+std::atomic<bool> runningMain(true);
 
 class ASCIIart{
     public:
@@ -32,9 +38,26 @@ void printMenu(){
 class CommandManager{
 
     public:
-        bool processCommand(){
-            bool flag = true;
+        CommandManager(std::string fileName, std::vector<Process> processes, int numCores)
+            : outFile(fileName), processes(processes), fcfsScheduler(numCores) {
+                // Correct way to check if file opened successfully
+                if (!outFile.is_open()) {
+                    // Throwing an exception is the standard way to handle 
+                    // failed object construction
+                    throw std::runtime_error("Error: Could not create or open the file!");
+                }
+            }
 
+        ~CommandManager() {
+            if (schedulerThread.joinable()) {
+                schedulerThread.join(); // Clean up thread on destruction
+            }
+            if (outFile.is_open()) {
+                outFile.close();
+            }
+        }
+
+        void processCommand() {
             std::string command;
             std::cout <<"\nEnter a command: ";
             std::getline(std::cin, command);
@@ -49,11 +72,26 @@ class CommandManager{
                 /* if (timestamp is 0.5 seconds ago) {
                     // Create x processes to be added to your scheduler ready queue every 0.5 seconds
                 } */
+                // Add processes
+                for (const auto& process: this->processes) {
+                    this->fcfsScheduler.addProcess(process);
+                }
+
+                // Launch scheduler on a background thread
+                schedulerThread = std::thread([this]() {
+                    this->fcfsScheduler.runScheduler(std::ref(this->outFile));
+                });
+                
+
             } else if (command == "scheduler-stop"){
-                std::cout << command << " command recognized. Doing something.";
+                // std::cout << command << " command recognized. Doing something.";
                 // batch_scheduler_enabled = false
+
+                this->fcfsScheduler.stopScheduler();
             } else if (command == "screen -s") {
                 // Create a process to be added to your scheduler ready queue
+                // Format: 
+                // running process (date) Core: n something/100
             } else if (command == "report-util"){
                 std::cout << command << " command recognized. Doing something.";
             } else if (command == "clear"){
@@ -61,24 +99,36 @@ class CommandManager{
                 printMenu();
             
             } else if (command == "exit"){
-                flag = false;
+                runningMain = false;
             } else {
                 std::cout << "Unknown command. Try again";
             }
-
-            return flag;
         }
+    private:
+        std::ofstream outFile;
+        std::vector<Process> processes;
+        FCFSScheduler fcfsScheduler;
+        std::thread schedulerThread; // ← add this
 };
 
 int main() {
     printMenu();
-    CommandManager cmdManager;
-
+    
+    // given list of processes
+    std::vector<Process> processes;
+    processes.emplace_back("Process_1", 1, 10);
+    processes.emplace_back("Process_2", 2, 10);
+    processes.emplace_back("Process_3", 3, 10);
+    processes.emplace_back("Process_4", 4, 10);
+    processes.emplace_back("Process_5", 5, 10);
+    
     // Batch_scheduler_enabled
+    CommandManager cmdManager("example.txt", processes, 4);
 
     // The loop runs until processCommand() returns false
-    while (cmdManager.processCommand()) {
+    while (runningMain) {
         // Loop continues
+        cmdManager.processCommand();
     }
 
     return 0;

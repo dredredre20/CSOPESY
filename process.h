@@ -1,7 +1,10 @@
 // a template for the process
+#pragma once
 #include <iostream>
 #include <string>
 #include <cstdlib> // for rand() function
+#include <fstream>
+#include <chrono>
 
 class Process {
 private:
@@ -15,18 +18,26 @@ public:
         : name(processName), id(processId), totalInstructions(numInstructions), remainingInstructions(numInstructions) {}
 
     // Execute one instruction of the process
-    void executeInstruction() {
+    void executeInstruction(std::ofstream& outFile) {
+        
+
         if (remainingInstructions > 0) {
-            std::cout << "Executing instruction for Process " << id << ": " << name << "\n";
+            outFile << "Executing instruction for Process " << id << ": " << name << std::endl;
+            // std::cout << "Executing instruction for Process " << id << ": " << name << std::endl;
             remainingInstructions--;
         } else {
-            std::cout << "Process " << id << ": " << name << " has already finished.\n";
+            outFile << "Process " << id << ": " << name << " has already finished.\n";
+            // std::cout << "Process " << id << ": " << name << " has already finished.\n";
         }
     }
 
     // Get the remaining number of instructions
     int getRemainingInstructions() const {
         return remainingInstructions;
+    }
+
+    int getID() const {
+        return id;
     }
 
     // Check if the process has finished

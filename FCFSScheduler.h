@@ -1,6 +1,11 @@
 #pragma once
 #include <vector>
 #include "process.h"
+#include <thread>
+#include <chrono>
+#include <fstream>
+
+std::atomic<bool> running(true);
 
 // a template for an FCFS scheduler
 class FCFSScheduler {
@@ -30,20 +35,36 @@ public:
     }
 
     // Run the scheduler
-    void runScheduler() {
-        while (!processQueues[0].empty()) {
+    void runScheduler(std::ofstream& outFile) {
+        // while (running) {}
+
+        while (running) {
             for (int core = 0; core < numCores; ++core) {
                 if (!processQueues[core].empty()) {
+                    std::cout << "Core " << core << "!" << std::endl;
                     Process currentProcess = processQueues[core].back();
                     processQueues[core].pop_back();
 
                     while (!currentProcess.hasFinished()) {
-                        currentProcess.executeInstruction();
+                        currentProcess.executeInstruction(outFile);
                     }
 
-                    std::cout << "Process " << currentProcess.getRemainingInstructions() << " completed on Core " << core + 1 << ".\n";
+                    outFile << "Process " << currentProcess.getID() << " completed on Core " << core + 1 << "." << std::endl;
+                    // std::cout << "Process " << currentProcess.getRemainingInstructions() << " completed on Core " << core + 1 << "." << std::endl;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-            }
+            } 
         }
+    }
+
+    int screenLs() {
+        // core
+        // return core of all processes
+        return 1;
+    }
+
+    void stopScheduler() {
+        std::cout << "Stopping scheduler!" << std::endl;
+        running = false;
     }
 };
