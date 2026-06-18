@@ -1,41 +1,37 @@
 #pragma once
 #include <vector>
-#include "process.h"
 #include <thread>
 #include <chrono>
 #include <fstream>
 
+#include "scheduler/FCFSScheduler.h"
+#include "../process/process.h"
+
 std::atomic<bool> running(true);
 
 // a template for an FCFS scheduler
-class FCFSScheduler {
-private:
-    int numCores;
-    std::vector<std::vector<Process>> processQueues; // One queue for each core
-
-public:
-    FCFSScheduler(int cores) : numCores(cores), processQueues(cores) {}
 
     // Add a process to the scheduler
-    void addProcess(const Process& process, int core = 0) {
+    void FCFSScheduler::addProcess(const Process& process, int core = 0) {
         if (core >= 0 && core < numCores) {
             processQueues[core].push_back(process);
-        } else {
+        }
+        else {
             std::cerr << "Invalid core specified for process addition.\n";
         }
     }
 
     // Sort the process queues based on remaining instructions (FCFS)
-    void sortProcessQueues() {
-        for(auto& queue : processQueues) {
+    void FCFSScheduler::sortProcessQueues() {
+        for (auto& queue : processQueues) {
             std::sort(queue.begin(), queue.end(), [](const Process& a, const Process& b) {
                 return a.getRemainingInstructions() > b.getRemainingInstructions();
-            });
+                });
         }
     }
 
     // Run the scheduler
-    void runScheduler(std::ofstream& outFile) {
+    void FCFSScheduler::runScheduler(std::ofstream& outFile) {
         // while (running) {}
 
         while (running) {
@@ -53,18 +49,17 @@ public:
                     // std::cout << "Process " << currentProcess.getRemainingInstructions() << " completed on Core " << core + 1 << "." << std::endl;
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-            } 
+            }
         }
     }
 
-    int screenLs() {
+    int FCFSScheduler::screenLs() {
         // core
         // return core of all processes
         return 1;
     }
 
-    void stopScheduler() {
+    void FCFSScheduler::stopScheduler() {
         std::cout << "Stopping scheduler!" << std::endl;
         running = false;
     }
-};
