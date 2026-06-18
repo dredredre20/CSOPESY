@@ -6,9 +6,10 @@
 
 #include "../process/process.h"
 
-
-std::atomic<bool> running(true);
-
+//std::atomic<bool> running(true);
+// 
+// 
+// 
 // a template for an FCFS scheduler
 class FCFSScheduler {
 private:
