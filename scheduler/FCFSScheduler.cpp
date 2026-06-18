@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <algorithm>
 
 #include "FCFSScheduler.h"
 #include "../process/process.h"
@@ -12,7 +13,7 @@ std::atomic<bool> running(true);
 // a template for an FCFS scheduler
 
     // Add a process to the scheduler
-    void FCFSScheduler::addProcess(const Process& process, int core = 0) {
+    void FCFSScheduler::addProcess(const Process& process, int core) {
         if (core >= 0 && core < numCores) {
             processQueues[core].push_back(process);
         }
