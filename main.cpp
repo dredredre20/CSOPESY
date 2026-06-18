@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <vector>
 
-#include "FCFSScheduler.h"
+#include "scheduler/FCFSScheduler.h"
 
 
 std::atomic<bool> runningMain(true);

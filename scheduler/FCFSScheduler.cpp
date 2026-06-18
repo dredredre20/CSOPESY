@@ -4,7 +4,7 @@
 #include <chrono>
 #include <fstream>
 
-#include "scheduler/FCFSScheduler.h"
+#include "FCFSScheduler.h"
 #include "../process/process.h"
 
 std::atomic<bool> running(true);
