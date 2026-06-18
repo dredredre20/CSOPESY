@@ -31,6 +31,10 @@
         return id;
     }
 
+    std::string Process::getName() const {
+        return name;
+    }
+
     // Check if the process has finished
     bool Process::hasFinished() const {
         return remainingInstructions == 0;

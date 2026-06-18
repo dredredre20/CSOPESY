@@ -25,20 +25,8 @@ public:
 
     int getID() const;
 
+    std::string getName() const;
+
     // Check if the process has finished
     bool hasFinished() const;
 };
-
-/* int main() {
-    // Create a sample process
-    Process myProcess("SampleProcess", 1, 10);
-
-    // Execute instructions until the process finishes
-    while (!myProcess.hasFinished()) {
-        myProcess.executeInstruction();
-    }
-
-    std::cout << "Process has finished!\n";
-
-    return 0;
-} */
