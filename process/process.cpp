@@ -8,17 +8,19 @@
 
 #include "process.h"
 
+using namespace std;
+
     // Execute one instruction of the process
-   void Process::executeInstruction(std::ofstream& outFile) {
+   void Process::executeInstruction() {
 
         if (remainingInstructions > 0) {
-            outFile << "Executing instruction for Process " << id << ": " << name << std::endl;
-            // std::cout << "Executing instruction for Process " << id << ": " << name << std::endl;
+            //outFile << "Executing instruction for Process " << id << ": " << name << std::endl;
+            cout << "Executing instruction for Process " << id << ": " << name << endl;
             remainingInstructions--;
         }
         else {
-            outFile << "Process " << id << ": " << name << " has already finished.\n";
-            // std::cout << "Process " << id << ": " << name << " has already finished.\n";
+           //outFile << "Process " << id << ": " << name << " has already finished.\n";
+            cout << "Process " << id << ": " << name << " has already finished.\n";
         }
     }
 

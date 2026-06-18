@@ -49,25 +49,53 @@ void FCFSScheduler::sortProcessQueues() {
 }
 
 // Run the scheduler
-void FCFSScheduler::runScheduler(std::ofstream& outFile) {
+void FCFSScheduler::runScheduler() {
+    std::vector<std::thread> threads;
 
-    while (running) {
-        for (int core = 0; core < numCores; ++core) {
-            if (!processQueues[core].empty()) {
-                std::cout << "Core " << core << "!" << std::endl;
-                Process currentProcess = processQueues[core].back();
-                processQueues[core].pop_back();
+    for (int core = 0; core < numCores; ++core) {
 
-                while (!currentProcess.hasFinished()) {
-                    currentProcess.executeInstruction(outFile);
+		// at each core, create a thread that continuously checks for processes in its queue and executes them
+        threads.emplace_back([this, core]() {
+
+            while (running) {
+                Process* currentProcess = nullptr;
+
+                { // lock queue for safe access 
+                    std::lock_guard<std::mutex> lock(queueMutex);
+                    // check if queue has processes, if there is, execute 
+                    if (!processQueues[core].empty()) {
+                        currentProcess = &processQueues[core].back();
+                        processQueues[core].pop_back();
+                    }
                 }
 
-                outFile << "Process " << currentProcess.getID() << " completed on Core " << core + 1 << "." << std::endl;
-                // std::cout << "Process " << currentProcess.getRemainingInstructions() << " completed on Core " << core + 1 << "." << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                if (currentProcess) {
+                    // create a log file for the current process
+                    ofstream logFile(currentProcess->getName() + ".txt");
+                    logFile << "Process name: " << currentProcess->getName() << "\nLogs:\n\n";
+
+                    // execute process until finished, log each instruction execution
+                    while (!currentProcess->hasFinished()) {
+                        std::string ts = getTimestamp();
+                        currentProcess->executeInstruction();
+                        logFile << ts << " Core:" << core
+                            << " \"Hello world from " << currentProcess->getName() << "!\"\n";
+                    }
+
+                    {   // store finished process
+                        std::lock_guard<std::mutex> lock(queueMutex);
+                        finishedProcesses.push_back(*currentProcess);
+                    }
+                }
+                else {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
             }
-        }
+            });
     }
+
+    for (auto& t : threads) t.join(); // join all threads after finishing
+    
 }
 
 int FCFSScheduler::screenLs() {

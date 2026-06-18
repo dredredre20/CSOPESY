@@ -22,7 +22,7 @@ public:
     void sortProcessQueues();
 
     // Run the scheduler
-    void runScheduler(std::ofstream& outFile);
+    void runScheduler();
 
     int screenLs();
 

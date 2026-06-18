@@ -18,7 +18,7 @@ public:
         : name(processName), id(processId), totalInstructions(numInstructions), remainingInstructions(numInstructions) {}
 
     // Execute one instruction of the process
-    void executeInstruction(std::ofstream& outFile);
+    void executeInstruction();
 
     // Get the remaining number of instructions
     int getRemainingInstructions() const;

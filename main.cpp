@@ -80,9 +80,10 @@ class CommandManager{
                 }
 
                 // Launch scheduler on a background thread
+                /*
                 schedulerThread = std::thread([this]() {
                     this->fcfsScheduler.runScheduler(std::ref(this->outFile));
-                });
+                });*/
                 
 
             } else if (command == "scheduler-stop"){
