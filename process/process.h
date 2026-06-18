@@ -18,32 +18,15 @@ public:
         : name(processName), id(processId), totalInstructions(numInstructions), remainingInstructions(numInstructions) {}
 
     // Execute one instruction of the process
-    void executeInstruction(std::ofstream& outFile) {
-        
-
-        if (remainingInstructions > 0) {
-            outFile << "Executing instruction for Process " << id << ": " << name << std::endl;
-            // std::cout << "Executing instruction for Process " << id << ": " << name << std::endl;
-            remainingInstructions--;
-        } else {
-            outFile << "Process " << id << ": " << name << " has already finished.\n";
-            // std::cout << "Process " << id << ": " << name << " has already finished.\n";
-        }
-    }
+    void executeInstruction(std::ofstream& outFile);
 
     // Get the remaining number of instructions
-    int getRemainingInstructions() const {
-        return remainingInstructions;
-    }
+    int getRemainingInstructions() const;
 
-    int getID() const {
-        return id;
-    }
+    int getID() const;
 
     // Check if the process has finished
-    bool hasFinished() const {
-        return remainingInstructions == 0;
-    }
+    bool hasFinished() const;
 };
 
 /* int main() {
