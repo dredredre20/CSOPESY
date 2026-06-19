@@ -1,32 +1,52 @@
-// a template for the process
 #pragma once
 #include <iostream>
 #include <string>
-#include <cstdlib> // for rand() function
-#include <fstream>
-#include <chrono>
+#include <memory>
+#include <vector>
+#include "../Commands/ICommand.hpp"
 
 class Process {
-private:
-    std::string name;
-    int id;
-    int totalInstructions;
-    int remainingInstructions;
 
 public:
-    Process(const std::string& processName, int processId, int numInstructions)
-        : name(processName), id(processId), totalInstructions(numInstructions), remainingInstructions(numInstructions) {}
+    enum ProcessState {
+        READY,
+        RUNNING,
+        WAITING,
+        FINISHED
+    };
 
-    // Execute one instruction of the process
-    void executeInstruction();
+    Process(int p_id, std::string name);
 
-    // Get the remaining number of instructions
-    int getRemainingInstructions() const;
+    void addCommand(ICommand::CommandType commandType);
 
-    int getID() const;
+    // Executes the command currently pointed to by commandCounter on the given core.
+    void executeCurrentCommand(int coreId);
+    void moveToNextLine();
+
+    bool isFinished() const;
+    int getRemainingTime() const;
+    int getCommandCounter() const;
+    int getLinesOfCode() const;
+    int getPID() const;
+    int getCPUCoreID() const;
+    void setCPUCoreID(int coreId);
+    ProcessState getState() const;
+    void setState(ProcessState state);
 
     std::string getName() const;
+    std::string getCreationTimestamp() const;
 
-    // Check if the process has finished
-    bool hasFinished() const;
+private:
+    int p_id;
+    std::string name;
+    std::string creationTimestamp;
+
+    typedef std::vector<std::shared_ptr<ICommand>> CommandList;
+    CommandList commandList;
+
+    int commandCounter;
+    int cpuCoreID = -1;
+    ProcessState currentState;
+
+    static std::string makeTimestamp();
 };

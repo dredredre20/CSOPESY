@@ -8,7 +8,11 @@ add_executable(MyProject
     main.cpp
     process/process.cpp
     scheduler/FCFSScheduler.cpp
- "CommandManager/CommandManager.h" "CommandManager/CommandManager.cpp" "Design_Utils/designAssets.cpp" "Design_Utils/designAssets.h")
+    CommandManager/CommandManager.cpp
+    Design_Utils/designAssets.cpp 
+    Commands/ICommand.cpp
+    Commands/PrintCommand.cpp
+)
 
 # Optional: include directories
 # target_include_directories(MyProject PRIVATE include/)

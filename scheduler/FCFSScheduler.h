@@ -1,32 +1,26 @@
 #pragma once
 #include <vector>
 #include <thread>
-#include <chrono>
-#include <fstream>
-
+#include <atomic>
+#include <mutex>
+#include <map>
 #include "../process/process.h"
 
-// a template for an FCFS scheduler
 class FCFSScheduler {
 private:
     int numCores;
+    int nextCore = 0;
     std::vector<std::vector<Process>> processQueues; // One queue for each core
+    std::map<int, Process*> runningProcesses;
+    std::atomic<bool> running{false};
+    std::mutex queueMutex;
+    std::vector<Process> finishedProcesses;
 
 public:
-    FCFSScheduler(int cores) : numCores(cores), processQueues(cores) {}
+    FCFSScheduler(int numCores) : numCores(numCores), processQueues(numCores) {}
 
-    // Add a process to the scheduler
-    void addProcess(const Process& process, int core = 0);
-
-    // Sort the process queues based on remaining instructions (FCFS)
-    void sortProcessQueues();
-
-    // Run the scheduler
+    void addProcess(const Process& process);
     void runScheduler();
-
-    int screenLs();
-
+    void screenLs();
     void stopScheduler();
-
-
 };

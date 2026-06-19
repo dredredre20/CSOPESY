@@ -1,33 +1,15 @@
-#include <string>
-#include <vector>
+#pragma once
 
-#include "../process/process.h"
+#include <thread>
 #include "../scheduler/FCFSScheduler.h"
 
-
 class CommandManager {
-
 public:
-    CommandManager(int numCores) : fcfs(numCores) {}
-
-    ~CommandManager() {
-        if (schedulerThread.joinable()) {
-            fcfs.stopScheduler();
-            schedulerThread.join(); // Clean up thread on destruction
-        }
-    }
-
-    // lambda function to start scheduler in separate thread
-    void startScheduler() {
-        schedulerThread = std::thread([this]() {
-            fcfs.runScheduler();
-        });
-    }
-
+    CommandManager(int numCores) : fcfs(numCores) {}  
+    
     bool processCommand();
 
-
 private:
-    FCFSScheduler fcfs;
-    std::thread schedulerThread; 
+    FCFSScheduler fcfs; // Default to 4 cores
+    std::thread schedulerThread;
 };
