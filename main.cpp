@@ -19,15 +19,14 @@ int main() {
     da.welcomeMenu();
     
     // given list of processes
-    std::vector<Process> processes;
-    processes.emplace_back("Process_1", 1, 10);
-    processes.emplace_back("Process_2", 2, 10);
-    processes.emplace_back("Process_3", 3, 10);
-    processes.emplace_back("Process_4", 4, 10);
-    processes.emplace_back("Process_5", 5, 10);
-    
+    //std::vector<Process> processes;
+    //processes.emplace_back("Process_2", 2, 10);
+    //processes.emplace_back("Process_3", 3, 10);
+    //processes.emplace_back("Process_4", 4, 10);
+    //processes.emplace_back("Process_5", 5, 10);
+    //
     // Batch_scheduler_enabled
-    CommandManager cmdManager("example.txt", processes, 4);
+    CommandManager cmdManager(4);
 
     // The loop runs until processCommand() returns false
     while (keepRunning) {

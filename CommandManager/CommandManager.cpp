@@ -1,59 +1,48 @@
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "../process/process.h"
 #include "../scheduler/FCFSScheduler.h"
 #include "../Design_Utils/designAssets.h"
 #include "CommandManager.h"
 
-bool CommandManager::processCommand() {
-    designAssets da;
+using namespace std;
 
-    std::string command;
-    std::cout << "\nEnter a command: ";
-    std::getline(std::cin, command);
+bool CommandManager::processCommand() {
+    //FCFSScheduler fcfs(4);
+    designAssets da;
+    //thread schedulerThread;
+
+    string command;
+    cout << "\nEnter a command: ";
+    getline(std::cin, command);
 
     if (command == "initialize") {
-        std::cout << command << " command recognized. Doing something.";
+        
+		// create processes and add them to the the ready queue of the scheduler
+        for (int i = 0; i < 10; i++) {
+			string name = "screen_0" + to_string(i);
+			Process p(name, i + 1, 100); 
+			fcfs.addProcess(p, i % 4); // distributing across cores
+        }
+
+        cout << "10 Processes added." << endl;
     }
     else if (command == "screen") {
         std::cout << command << " command recognized. Doing something.";
     }
     else if (command == "scheduler-start") {
-        std::cout << command << " command recognized. Doing something.";
-
-
-    }
-    else if (command == "scheduler-test") {
-        /* if (timestamp is 0.5 seconds ago) {
-            // Create x processes to be added to your scheduler ready queue every 0.5 seconds
-        } */
-        // Add processes
-        for (const auto& process : this->processes) {
-            this->fcfsScheduler.addProcess(process);
-        }
-
-        // Launch scheduler on a background thread
-        /*
-        schedulerThread = std::thread([this]() {
-            this->fcfsScheduler.runScheduler(std::ref(this->outFile));
-        });*/
-
+        // starte scheduler in a separate thread to allow concurrent command processing
+        schedulerThread = thread(&FCFSScheduler::runScheduler, &fcfs);
+		schedulerThread.detach(); // detach the thread to allow it to run independently
 
     }
     else if (command == "scheduler-stop") {
-        // std::cout << command << " command recognized. Doing something.";
-        // batch_scheduler_enabled = false
-
-        this->fcfsScheduler.stopScheduler();
-
-
-
+        fcfs.stopScheduler();
     }
-    else if (command == "screen -s") {
-        // Create a process to be added to your scheduler ready queue
-        // Format: 
-        // running process (date) Core: n something/100
+    else if (command == "screen -ls") {
+        fcfs.screenLs();
     }
     else if (command == "report-util") {
         std::cout << command << " command recognized. Doing something.";

@@ -50,6 +50,8 @@ void FCFSScheduler::sortProcessQueues() {
 
 // Run the scheduler
 void FCFSScheduler::runScheduler() {
+    // Ensure the running flag is set when starting the scheduler so it can be restarted
+    running = true;
     std::vector<std::thread> threads;
 
     for (int core = 0; core < numCores; ++core) {
