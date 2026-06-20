@@ -1,5 +1,5 @@
 #include <iostream>
-#include "designAssets.h"
+#include "DesignAssets.hpp"
 
 
  void designAssets::printASCIIart() {
@@ -14,7 +14,7 @@
      printASCIIart();
      std::cout << "\nHello, Welcome to CSOPESY commandline!";
      std::cout << "\nType 'exit' to quit, 'clear' to clear screen";
-     std::cout << "\n\n** IMPORTANT: Type 'initialize' to load config and start system **\n";
+     //std::cout << "\n\n** IMPORTANT: Type 'initialize' to load config and start system **\n";
  }
 
 

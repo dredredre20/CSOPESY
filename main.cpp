@@ -4,9 +4,9 @@
 #include <cstdlib>
 #include <vector>
 
-#include "scheduler/FCFSScheduler.h"
-#include "Design_Utils/designAssets.h"
-#include "CommandManager/CommandManager.h"
+#include "Scheduler/FCFSScheduler.hpp"
+#include "Design_Utils/DesignAssets.hpp"
+#include "CommandManager/CommandManager.hpp"
 
 int main() {
 
@@ -15,7 +15,7 @@ int main() {
     designAssets da;
     da.welcomeMenu();
     
-    CommandManager cmdManager(4);
+    CommandManager cmdManager(4); // declare 4 cores
 
     // The loop runs until processCommand() returns false
     while (keepRunning) {

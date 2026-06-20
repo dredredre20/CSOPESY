@@ -20,6 +20,8 @@ std::string PrintCommand::getTimestamp() {
     return oss.str();
 }
 
+// Creates a text file to save the process logs
+// 
 void PrintCommand::execute(int coreId) {
 
     std::string filename = this->processName + ".txt";
@@ -31,6 +33,7 @@ void PrintCommand::execute(int coreId) {
         isNewFile = !checkFile.good() || checkFile.peek() == std::ifstream::traits_type::eof();
     }
 
+    // Open file in append mode
     std::ofstream logFile(filename, std::ios::app);
     if (!logFile.is_open()) {
         return;
@@ -40,6 +43,7 @@ void PrintCommand::execute(int coreId) {
         logFile << "Logs:\n";
     }
 
+    // Write the timestamp, core, and the string message
     logFile << getTimestamp()
             << " Core:" << coreId
             << " \"" << this->toPrint << "\"\n";

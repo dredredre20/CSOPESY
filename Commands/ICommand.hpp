@@ -11,8 +11,6 @@ public:
 
     CommandType getCommandType() const;
 
-    // CoreId is passed in so a command knows which core executed it
-    // (needed for logging "Core:X" in the print command).
     virtual void execute(int coreId) = 0;
 
 protected:

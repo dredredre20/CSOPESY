@@ -6,10 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 # Add executable (list all your .cpp source files)
 add_executable(MyProject
     main.cpp
-    process/process.cpp
-    scheduler/FCFSScheduler.cpp
+    Process/Process.cpp
+    Scheduler/FCFSScheduler.cpp
     CommandManager/CommandManager.cpp
-    Design_Utils/designAssets.cpp 
+    Design_Utils/DesignAssets.cpp 
     Commands/ICommand.cpp
     Commands/PrintCommand.cpp
 )

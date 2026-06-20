@@ -4,7 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <map>
-#include "../process/process.h"
+#include "../Process/Process.hpp"
 
 class FCFSScheduler {
 private:

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <thread>
-#include "../scheduler/FCFSScheduler.h"
+#include "../Scheduler/FCFSScheduler.hpp"
 
 class CommandManager {
 public:
@@ -10,6 +10,6 @@ public:
     bool processCommand();
 
 private:
-    FCFSScheduler fcfs; // Default to 4 cores
+    FCFSScheduler fcfs; 
     std::thread schedulerThread;
 };
