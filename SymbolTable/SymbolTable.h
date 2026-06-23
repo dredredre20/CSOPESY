@@ -1,0 +1,17 @@
+#pragma once
+#include <unordered_map>
+#include <string>
+
+class SymbolTable {
+    public:
+        void setVar(std::string varName, uint16_t value) {
+            this->table[varName] = value;
+        }
+
+        uint16_t get(const std::string&name) {
+            return table[name];
+        };
+
+    private:
+        std::unordered_map<std::string, uint16_t> table;
+};
