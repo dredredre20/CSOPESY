@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include "../Commands/ICommand.hpp"
+#include "../SymbolTable/SymbolTable.hpp"
 
 class Process {
 
@@ -33,6 +34,8 @@ public:
     ProcessState getState() const;
     void setState(ProcessState state);
 
+    void symbolTable_setVar(std::string varName, uint16_t value);
+
     std::string getName() const;
     std::string getCreationTimestamp() const;
 
@@ -47,6 +50,8 @@ private:
     int commandCounter;
     int cpuCoreID = -1;
     ProcessState currentState;
+
+    SymbolTable symbolTable;
 
     static std::string makeTimestamp();
 };

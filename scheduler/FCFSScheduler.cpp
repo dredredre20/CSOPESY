@@ -1,5 +1,5 @@
 #include "FCFSScheduler.hpp"
-#include "../Process/Process.hpp"
+#include "../process/Process.hpp"
 #include <vector>
 #include <thread>
 #include <chrono>

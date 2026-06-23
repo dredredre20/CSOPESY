@@ -1,7 +1,7 @@
 #pragma once
 
 #include <thread>
-#include "../Scheduler/FCFSScheduler.hpp"
+#include "../scheduler/FCFSScheduler.hpp"
 
 class CommandManager {
 public:

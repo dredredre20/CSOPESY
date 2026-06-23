@@ -1,4 +1,5 @@
 #include "Process.hpp"
+#include "../SymbolTable/SymbolTable.hpp"
 #include "../Commands/PrintCommand.hpp"
 #include <chrono>
 #include <ctime>
@@ -55,6 +56,10 @@ void Process::moveToNextLine() {
             this->currentState = ProcessState::FINISHED;
         }
     }
+}
+
+void Process::symbolTable_setVar(std::string varName, uint16_t value) {
+    this->symbolTable.setVar(varName, value);
 }
 
 bool Process::isFinished() const {

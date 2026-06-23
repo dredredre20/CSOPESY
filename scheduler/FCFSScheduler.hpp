@@ -4,9 +4,10 @@
 #include <atomic>
 #include <mutex>
 #include <map>
-#include "../Process/Process.hpp"
+#include "../process/Process.hpp"
+#include "../process/ProcessResolver.hpp"
 
-class FCFSScheduler {
+class FCFSScheduler : public ProcessResolver {
 private:
     int numCores;
     int nextCore = 0;
@@ -15,6 +16,10 @@ private:
     std::atomic<bool> running{false};
     std::mutex queueMutex;
     std::vector<Process> finishedProcesses;
+
+    Process* getProcessOnCore(int coreId) override {
+        return runningProcesses[coreId];
+    }
 
 public:
     FCFSScheduler(int numCores) : numCores(numCores), processQueues(numCores) {}

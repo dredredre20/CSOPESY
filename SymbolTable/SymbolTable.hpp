@@ -4,6 +4,8 @@
 
 class SymbolTable {
     public:
+        SymbolTable();
+
         void setVar(std::string varName, uint16_t value) {
             this->table[varName] = value;
         }
