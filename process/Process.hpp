@@ -35,6 +35,7 @@ public:
     void setState(ProcessState state);
 
     void symbolTable_setVar(std::string varName, uint16_t value);
+    uint16_t symbolTable_getVar(std::string varName);
 
     std::string getName() const;
     std::string getCreationTimestamp() const;

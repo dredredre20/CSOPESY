@@ -10,8 +10,8 @@ class SymbolTable {
             this->table[varName] = value;
         }
 
-        uint16_t get(const std::string&name) {
-            return table[name];
+        uint16_t getVar(const std::string varName) {
+            return table[varName];
         };
 
     private:

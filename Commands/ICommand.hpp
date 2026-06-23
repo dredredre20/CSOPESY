@@ -3,7 +3,12 @@
 class ICommand {
 public:
     enum CommandType {
-        PRINT
+        PRINT,
+        DECLARE,
+        ADD,
+        SUBTRACT,
+        SLEEP,
+        FOR
     };
 
     ICommand(int p_id, CommandType commandType);
