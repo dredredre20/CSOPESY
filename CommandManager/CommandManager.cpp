@@ -20,6 +20,49 @@ using namespace std;
 static bool initialized = false;
 static Config config;
 
+bool runningProcesses = true; // flag for controlling 
+
+
+
+// Generate processes with different command types
+static void generateProcesses(FCFSScheduler& scheduler, int numProcesses) {
+    // further checking needed
+
+	for (int i = 1; i <= numProcesses; ++i) {
+
+        if (!runningProcesses) break;
+
+		string name = "process" + string(i < 10 ? "0" : "") + to_string(i);
+		Process p(i, name);
+		
+		for (int j = 0; j < 100; ++j) {
+
+            if (j % 2 == 0){
+                p.addCommand(ICommand::PRINT);
+			}
+			else if (j % 3 == 0) {
+				p.addCommand(ICommand::SLEEP);
+			}
+			else if (j % 5 == 0) {
+				p.addCommand(ICommand::DECLARE);
+			}
+			else if (j % 7 == 0) {
+				p.addCommand(ICommand::ADD);
+			}
+			else if (j % 11 == 0) {
+				p.addCommand(ICommand::SUBTRACT);
+			}
+			else {
+				p.addCommand(ICommand::FOR);
+			}
+		}
+		scheduler.addProcess(p);
+
+        this_thread::sleep_for(chrono::milliseconds(500));
+	}
+}
+
+
 bool CommandManager::processCommand() {
     designAssets da;
 
@@ -129,6 +172,9 @@ bool CommandManager::processCommand() {
 
 	// TODO: Create Scheduler class to return the correct scheduler based on config.scheduler
     if (command == "scheduler-start") {
+
+        generateProcesses(fcfs, 50); // 50 as base testing
+
         // Run the main scheduler loop on a separate background thread
         schedulerThread = thread(&FCFSScheduler::runScheduler, &fcfs);
         schedulerThread.detach();
@@ -136,6 +182,7 @@ bool CommandManager::processCommand() {
     }
     
     else if (command == "scheduler-stop") {
+        runningProcesses = false;
         fcfs.stopScheduler();
     }
 

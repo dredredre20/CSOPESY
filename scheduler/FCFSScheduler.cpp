@@ -82,6 +82,7 @@ void FCFSScheduler::runScheduler() {
         });
     }
 
+    /*
     // Generate 10 dummy processes every 0.5 seconds
     for (int i = 1; i <= 10; i++) {
         if (!running) break; 
@@ -99,7 +100,7 @@ void FCFSScheduler::runScheduler() {
 
         // Wait for 0.5 seconds before creating the next process 
         this_thread::sleep_for(chrono::milliseconds(500));
-    }
+    }*/
 
     // Block the main thread until all thread cores exit
     for (auto& t : threads) {
