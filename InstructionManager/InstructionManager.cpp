@@ -3,6 +3,9 @@
 #include "../Commands/ICommand.hpp"
 #include "../Design_Utils/DesignAssets.hpp"
 #include "../Config.hpp"
+#include "../Scheduler/FCFSScheduler.hpp"
+#include "../Scheduler/RRScheduler.hpp"
+#include "../Scheduler/Scheduler.hpp"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -18,14 +21,12 @@
 using namespace std;
 
 static bool initialized = false;
+static std::unique_ptr<Scheduler> scheduler;
 static Config config;
-
-bool runningProcesses = true; // flag for controlling 
-
-
+static bool runningProcesses = true; // flag for controlling 
 
 // Generate processes with different command types
-static void generateProcesses(FCFSScheduler& scheduler, int numProcesses) {
+static void generateProcesses(Scheduler& scheduler, int numProcesses) {
     // further checking needed
 
 	for (int i = 1; i <= numProcesses; ++i) {
@@ -156,50 +157,58 @@ bool InstructionManager::processCommand() {
         }
 
         file.close();
+
+		if (config.scheduler == "fcfs") {
+			scheduler = std::make_unique<FCFSScheduler>();
+		}
+
+		else if (config.scheduler == "rr") {
+			scheduler = std::make_unique<RRScheduler>();
+		}
+
+		else {
+			cerr << "Error: Unknown scheduler type '" << config.scheduler << "' in config.txt." << endl;
+			return true;
+		}
+
+        scheduler->initialize(config);
         initialized = true;
         cout << "Successfully initialized from: " << found.string() << "\n";
 
-        // TODO: Pass config instance to Scheduler;
         return true;
     }
 
     if (!initialized) {
-		if (command != "initialize" || command != "clear" || command != "exit") {
+		if (command != "initialize" && command != "clear" && command != "exit") {
 			cout << "Please run 'initialize' first.\n";
 			return true;
 		}
     }
 
-	// TODO: Create Scheduler class to return the correct scheduler based on config.scheduler
     if (command == "scheduler-start") {
-
-        generateProcesses(fcfs, 50); // 50 as base testing
-
-        // Run the main scheduler loop on a separate background thread
-        schedulerThread = thread(&FCFSScheduler::runScheduler, &fcfs);
-        schedulerThread.detach();
+        scheduler->start();
+        generateProcesses(*scheduler, 50); // 50 as base testing
         cout << "Scheduler started.\n"; 
     }
     
     else if (command == "scheduler-stop") {
         runningProcesses = false;
-        fcfs.stopScheduler();
+        scheduler->stop();
     }
 
     else if (command == "screen -ls") {
-        fcfs.screenLs();
+        scheduler->screenLs();
     }
 
-    // TODO: complete commands screen - s->process - smi, screen - r
     else if (command == "screen -s") {
-
+        // TODO: Implement screen -s
     }
 
     else if (command.rfind("screen -r ", 0) == 0) {
 
         // extract process name from input
         std::string processName = command.substr(10);
-        Process* target = fcfs.findProcessByName(processName);
+        Process* target = scheduler->findProcessByName(processName);
 
         if (target == nullptr) {
             std::cout << "Process " << processName << " not found.\n";

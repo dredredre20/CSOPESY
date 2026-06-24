@@ -15,7 +15,7 @@ int main() {
     designAssets da;
     da.welcomeMenu();
     
-    InstructionManager instManager(4); // declare 4 cores
+    InstructionManager instManager; // declare 4 cores
 
     // The loop runs until processCommand() returns false
     while (keepRunning) {

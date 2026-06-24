@@ -13,7 +13,8 @@ add_executable(MyProject
     Commands/ICommand.cpp
     Commands/PrintCommand.cpp
     SymbolTable/SymbolTable.cpp
-)
+    Scheduler/Scheduler.cpp 
+    Scheduler/RRScheduler.cpp)
 
 # Optional: include directories
 # target_include_directories(MyProject PRIVATE include/)
