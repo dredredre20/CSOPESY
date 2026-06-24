@@ -64,7 +64,7 @@ void Process::symbolTable_setVar(std::string varName, uint16_t value) {
 
 
 uint16_t Process::symbolTable_getVar(std::string varName) {
-    this->symbolTable.getVar(varName);
+    return this->symbolTable.getVar(varName);
 }
 
 bool Process::isFinished() const {
