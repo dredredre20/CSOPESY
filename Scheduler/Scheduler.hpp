@@ -1,10 +1,7 @@
 #pragma once
 #include "../Config.hpp"
 #include "../process/Process.hpp"
-#include <queue>
 #include <mutex>
-#include <memory>
-#include <condition_variable>
 #include <vector>
 #include <thread>
 #include <map>
