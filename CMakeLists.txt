@@ -12,6 +12,7 @@ add_executable(MyProject
     Design_Utils/DesignAssets.cpp 
     Commands/ICommand.cpp
     Commands/PrintCommand.cpp
+    SymbolTable/SymbolTable.cpp
 )
 
 # Optional: include directories
