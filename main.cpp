@@ -6,7 +6,7 @@
 
 #include "Scheduler/FCFSScheduler.hpp"
 #include "Design_Utils/DesignAssets.hpp"
-#include "CommandManager/CommandManager.hpp"
+#include "InstructionManager/InstructionManager.hpp"
 
 int main() {
 
@@ -15,12 +15,12 @@ int main() {
     designAssets da;
     da.welcomeMenu();
     
-    CommandManager cmdManager(4); // declare 4 cores
+    InstructionManager instManager(4); // declare 4 cores
 
     // The loop runs until processCommand() returns false
     while (keepRunning) {
         // Loop continues
-        keepRunning = cmdManager.processCommand();
+        keepRunning = instManager.processCommand();
     }
 
     return 0;

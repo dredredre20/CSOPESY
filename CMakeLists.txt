@@ -8,7 +8,7 @@ add_executable(MyProject
     main.cpp
     Process/Process.cpp
     Scheduler/FCFSScheduler.cpp
-    CommandManager/CommandManager.cpp
+    InstructionManager/InstructionManager.cpp
     Design_Utils/DesignAssets.cpp 
     Commands/ICommand.cpp
     Commands/PrintCommand.cpp

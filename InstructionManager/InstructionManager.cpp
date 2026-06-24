@@ -1,4 +1,4 @@
-#include "CommandManager.hpp"
+#include "InstructionManager.hpp"
 #include "../process/Process.hpp"
 #include "../Commands/ICommand.hpp"
 #include "../Design_Utils/DesignAssets.hpp"
@@ -63,7 +63,7 @@ static void generateProcesses(FCFSScheduler& scheduler, int numProcesses) {
 }
 
 
-bool CommandManager::processCommand() {
+bool InstructionManager::processCommand() {
     designAssets da;
 
     string command;

@@ -3,9 +3,9 @@
 #include <thread>
 #include "../scheduler/FCFSScheduler.hpp"
 
-class CommandManager {
+class InstructionManager {
 public:
-    CommandManager(int numCores) : fcfs(numCores) {}  
+    InstructionManager(int numCores) : fcfs(numCores) {}
     
     bool processCommand();
 
