@@ -150,3 +150,18 @@ void FCFSScheduler::stopScheduler() {
     cout << "Stopping scheduler...\n";
     running = false;
 }
+
+// return specific process name
+Process* FCFSScheduler::findProcessByName(const std::string& name) {
+    lock_guard<mutex> lock(queueMutex);
+
+    for (auto& [core, p] : runningProcesses) {
+        if (p->getName() == name) return p;
+    }
+
+    for (auto& p : finishedProcesses) {
+        if (p.getName() == name) return &p;
+    }
+
+    return nullptr;
+}

@@ -139,9 +139,54 @@ bool CommandManager::processCommand() {
         fcfs.stopScheduler();
     }
 
-    // TODO: Add commands screen -s -> process-smi, screen -r
     else if (command == "screen -ls") {
         fcfs.screenLs();
+    }
+
+    // TODO: complete commands screen - s->process - smi, screen - r
+    else if (command == "screen -s") {
+
+    }
+
+    else if (command.rfind("screen -r ", 0) == 0) {
+
+        // extract process name from input
+        std::string processName = command.substr(10);
+        Process* target = fcfs.findProcessByName(processName);
+
+        if (target == nullptr) {
+            std::cout << "Process " << processName << " not found.\n";
+        }
+        else {
+            system("cls");
+            std::string screenCmd;
+            while (true) {
+                std::cout << "root:\\> ";
+                std::getline(std::cin, screenCmd);
+
+                if (screenCmd == "process-smi") {
+                    std::cout << "Process name: " << target->getName() << "\n";
+                    std::cout << "ID: " << target->getPID() << "\n";
+                    std::cout << "Logs:\n";
+                    // TODO: print logs here
+
+                    if (target->isFinished()) {
+                        std::cout << "Finished!\n";
+                    }
+                    else {
+                        std::cout << "Current instruction line: " << target->getCommandCounter() << "\n";
+                        std::cout << "Lines of code: " << target->getLinesOfCode() << "\n";
+                    }
+                }
+                else if (screenCmd == "exit") {
+                    system("cls");
+                    break;
+                }
+                else {
+                    std::cout << "Unknown command.\n";
+                }
+            }
+        }
     }
 
     // TODO: Implementation for report-util

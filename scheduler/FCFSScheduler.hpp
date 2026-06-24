@@ -23,6 +23,7 @@ private:
 
 public:
     FCFSScheduler(int numCores) : numCores(numCores), processQueues(numCores) {}
+    Process* findProcessByName(const std::string& name);
 
     void addProcess(const Process& process);
     void runScheduler();
