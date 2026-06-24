@@ -1,5 +1,5 @@
 #include "CommandManager.hpp"
-#include "../process/process.hpp"
+#include "../process/Process.hpp"
 #include "../Commands/ICommand.hpp"
 #include "../Design_Utils/DesignAssets.hpp"
 #include "../Config.hpp"
