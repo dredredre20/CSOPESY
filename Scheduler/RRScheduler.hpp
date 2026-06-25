@@ -2,5 +2,13 @@
 #include "Scheduler.hpp"
 
 class RRScheduler : public Scheduler {
-	void runCycle() override;
+    // timeslice is inherited from config
+public: 
+    RRScheduler(int timeSlice) : timeSlice(timeSlice) {}
+
+protected:
+    void runCycle() override;
+
+private:
+    int timeSlice;
 };
