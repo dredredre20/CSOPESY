@@ -1,8 +1,18 @@
 #include "RRScheduler.hpp"
+#include "../process/Process.hpp"
 #include <thread>
 #include <chrono>
 
 using namespace std;
+
+Process* RRScheduler::getProcessOnCore(int coreId) {
+    lock_guard<mutex> lock(queueMutex);
+    auto it = runningProcesses.find(coreId);
+    if (it != runningProcesses.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
 
 void RRScheduler::runCycle() {
     while (running) {

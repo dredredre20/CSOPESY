@@ -162,8 +162,8 @@ bool InstructionManager::processCommand() {
 			scheduler = std::make_unique<FCFSScheduler>();
 		}
 
-		else if (config.scheduler == "rr") {
-			scheduler = std::make_unique<RRScheduler>();
+		else if (config.scheduler == "rr") { // pass time quantum
+			scheduler = std::make_unique<RRScheduler>(config.quantumCycles);
 		}
 
 		else {
