@@ -16,6 +16,7 @@ public:
 	void stop();
 
 	void screenLs();
+	void reportUtil();
 	Process* findProcessByName(const std::string& name);
 
 protected:

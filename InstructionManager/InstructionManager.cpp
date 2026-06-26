@@ -312,9 +312,9 @@ bool InstructionManager::processCommand() {
         }
     }
 
-    // TODO: Implementation for report-util
+    // FOR CHECKING
     else if (command == "report-util") {
-        std::cout << command << " command recognized. Doing something.";
+        scheduler->reportUtil();
     }
 
     else if (command == "clear") {

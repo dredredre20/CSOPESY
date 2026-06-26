@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include "Scheduler.hpp"
 
 using namespace std;
@@ -92,4 +93,72 @@ Process* Scheduler::findProcessByName(const std::string& name) {
 		}
 	}
 	return nullptr;
+}
+
+void Scheduler::reportUtil() {
+	lock_guard<mutex> lock(queueMutex);
+	ofstream logFile("csopesy-log.txt", ios::app);
+
+	if (!logFile.is_open()) {
+		std::cerr << "Error: Could not open csopesy-log.txt for writing.\n";
+		return;
+	}
+
+	string border = "================================";
+	string timestamp = getTimestamp();
+
+	// Calculate metrics
+	int coresUsed = 0;
+	for (const auto& [core, p] : runningProcesses) {
+		if (p != nullptr) {
+			coresUsed++;
+		}
+	}
+	int coresAvailable = config.numCPU;
+	double cpuUtilization = (coresUsed > 0) ? (static_cast<double>(coresUsed) / static_cast<double>(coresAvailable)) * 100.0 : 0.0;
+
+	// Write header and metrics
+	logFile << "\n" << border << "\n";
+	logFile << "SYSTEM REPORT " << timestamp << "\n";
+	logFile << border << "\n";
+	logFile << "Cores Available: " << coresAvailable << "\n";
+	logFile << "Cores Used: " << coresUsed << "\n";
+	logFile << "CPU Utilization: " << fixed << std::setprecision(2) << cpuUtilization << "%\n";
+	logFile << "\n";
+
+	// Write running processes
+	logFile << "Running Processes:\n";
+	if (runningProcesses.empty()) {
+		logFile << "  None\n";
+	}
+	else {
+		for (const auto& [core, p] : runningProcesses) {
+			logFile << "  " << p->getName()
+				<< " " << getTimestamp()
+				<< " Core:" << core
+				<< "   " << p->getCommandCounter()
+				<< "/" << p->getLinesOfCode() << "\n";
+		}
+	}
+
+	logFile << "\n";
+
+	// Write finished processes
+	logFile << "Finished Processes:\n";
+	if (finishedProcesses.empty()) {
+		logFile << "  None\n";
+	}
+	else {
+		for (const auto& p : finishedProcesses) {
+			logFile << "  " << p.getName()
+				<< " (" << p.getCreationTimestamp() << ")"
+				<< " Finished   "
+				<< p.getLinesOfCode() << "/" << p.getLinesOfCode() << "\n";
+		}
+	}
+
+	logFile << border << "\n";
+	logFile.close();
+
+	std::cout << "Report saved to csopesy-log.txt\n";
 }
