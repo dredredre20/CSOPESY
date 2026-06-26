@@ -6,6 +6,10 @@
 #include <filesystem>
 #include <fstream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 MainMenuConsole::MainMenuConsole() : AConsole(MAIN_MENU_CONSOLE){}
 
 void MainMenuConsole::onEnabled(){
@@ -88,6 +92,43 @@ void MainMenuConsole::process(){
 // --------- Command Interpreter Implementation ---------
 // (Includes helper functions to process the commands)
 
+static bool runningProcesses = true; // flag for controlling
+static void generateProcesses(Scheduler& scheduler, int numProcesses, const Config& cfg) {
+    // further checking needed
+
+    for (int i = 1; i <= numProcesses; ++i) {
+
+        if (!runningProcesses) break;
+
+        std::string name = "process" + std::string(i < 10 ? "0" : "") + std::to_string(i);
+        std::shared_ptr<Process> p = std::make_shared<Process>(i, name);
+
+        for (int j = 0; j < 100; ++j) {
+
+            if (j % 2 == 0) {
+                p->addCommand(ICommand::PRINT);
+            }
+            else if (j % 3 == 0) {
+                p->addCommand(ICommand::SLEEP);
+            }
+            else if (j % 5 == 0) {
+                p->addCommand(ICommand::DECLARE);
+            }
+            else if (j % 7 == 0) {
+                p->addCommand(ICommand::ADD);
+            }
+            else if (j % 11 == 0) {
+                p->addCommand(ICommand::SUBTRACT);
+            }
+            else {
+                p->addCommand(ICommand::FOR);
+            }
+        }
+        scheduler.addProcess(p);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(cfg.batchFreq * 100));
+    }
+}
 
 // Logic for handling the initialize command
 void MainMenuConsole::handleInitializeCommand() {
@@ -249,21 +290,49 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
 
 
 // Logic for handling the scheduler -start command
-void MainMenuConsole:: handleSchedulerStartCommand(){
-    
+void MainMenuConsole::handleSchedulerStartCommand() {
+    if (!this->scheduler) {
+        std::cout << "Error: Scheduler not initialized.\n";
+        return;
+    }
+
+    runningProcesses = true;
+    scheduler->start();  // start threads first
+
+    // Generate processes on a detached thread so CLI stays responsive
+    std::thread([this]() {
+        generateProcesses(*this->scheduler, 50, this->config);
+        }).detach();
+
+    std::cout << "Scheduler started.\n";
 }
 
 // Logic for handling the scheduler -stop command
-void MainMenuConsole:: handleSchedulerStopCommand(){
-    
+void MainMenuConsole::handleSchedulerStopCommand() {
+    if (!this->scheduler) {
+        std::cout << "Error: Scheduler not initialized.\n";
+        return;
+    }
+    runningProcesses = false;
+    scheduler->stop();
+    std::cout << "Scheduler stopped.\n";
 }
 
 // Logic for handling the report-util command
-void MainMenuConsole:: handleReportUtilCommand(){
-    
+void MainMenuConsole::handleReportUtilCommand() {
+    if (!this->scheduler) {
+        std::cout << "Error: Scheduler not initialized.\n";
+        return;
+    }
+    scheduler->reportUtil();
 }
 
 // Logic for handling the screen -ls command
-void MainMenuConsole:: handleScreenLsCommand(){
-    
+void MainMenuConsole::handleScreenLsCommand() {
+    if (!this->scheduler) {
+        std::cout << "Error: Scheduler not initialized.\n";
+        return;
+    }
+    scheduler->screenLs();
 }
+
