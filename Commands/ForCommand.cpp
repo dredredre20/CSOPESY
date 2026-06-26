@@ -1,6 +1,6 @@
 #include "ForCommand.hpp"
-#include "../process/Process.hpp"
-#include "../process/ProcessResolver.hpp"
+#include "../Process/Process.hpp"
+#include "../Process/ProcessResolver.hpp"
 #include <string>
 #include <vector>
 

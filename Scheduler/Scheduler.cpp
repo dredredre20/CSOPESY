@@ -13,7 +13,7 @@ void Scheduler::initialize(const Config& cfg) {
     processQueues.resize(cfg.numCPU);
 }
 
-void Scheduler::addProcess(const Process& process) {
+void Scheduler::addProcess(std::shared_ptr<Process> process) {
     lock_guard<mutex> lock(queueMutex);
     processQueues[nextCore].push_back(process);
 	nextCore = (nextCore + 1) % config.numCPU;
@@ -22,7 +22,7 @@ void Scheduler::addProcess(const Process& process) {
 void Scheduler::start() {
     running = true;
     for (int i = 0; i < config.numCPU; ++i) {
-        cpuThreads.emplace_back(&Scheduler::runCycle, this);
+        cpuThreads.emplace_back(&Scheduler::runCycle, this, i);
     }
 }
 
@@ -70,95 +70,85 @@ void Scheduler::screenLs() {
     if (finishedProcesses.empty()) {
         cout << "\n";
     }
-    for (const auto& p : finishedProcesses) {
-        cout << p.getName()
-            << " (" << p.getCreationTimestamp() << ")"
-            << " Finished   "
-            << p.getLinesOfCode() << "/" << p.getLinesOfCode() << "\n";
-    }
+	else{
+		for (const auto& p : finishedProcesses) {
+			cout << p->getName()
+				<< " (" << p->getCreationTimestamp() << ")"
+				<< " Finished   "
+				<< p->getLinesOfCode() << "/" << p->getLinesOfCode() << "\n";
+		}
+	}
     cout << border;
     cout << "\n";
 }
 
-Process* Scheduler::findProcessByName(const std::string& name) {
+std::shared_ptr<Process> Scheduler::findProcessByName(const std::string& name) {
 	lock_guard<mutex> lock(queueMutex);
-	for (const auto& [core, p] : runningProcesses) {
-		if (p->getName() == name) {
-			return p;
-		}
-	}
-	for (const auto& p : finishedProcesses) {
-		if (p.getName() == name) {
-			return const_cast<Process*>(&p);
-		}
-	}
-	return nullptr;
+	for (auto& queue : processQueues) {
+        for (auto& process : queue) {
+            if (process->getName() == name) {
+                return process; 
+            }
+        }
+    }
+    return nullptr;
 }
 
 void Scheduler::reportUtil() {
-	lock_guard<mutex> lock(queueMutex);
-	ofstream logFile("csopesy-log.txt", ios::app);
-
-	if (!logFile.is_open()) {
-		std::cerr << "Error: Could not open csopesy-log.txt for writing.\n";
-		return;
-	}
-
-	string border = "================================";
-	string timestamp = getTimestamp();
-
-	// Calculate metrics
-	int coresUsed = 0;
-	for (const auto& [core, p] : runningProcesses) {
-		if (p != nullptr) {
-			coresUsed++;
-		}
-	}
-	int coresAvailable = config.numCPU;
-	double cpuUtilization = (coresUsed > 0) ? (static_cast<double>(coresUsed) / static_cast<double>(coresAvailable)) * 100.0 : 0.0;
-
-	// Write header and metrics
-	logFile << "\n" << border << "\n";
-	logFile << "SYSTEM REPORT " << timestamp << "\n";
-	logFile << border << "\n";
-	logFile << "Cores Available: " << coresAvailable << "\n";
-	logFile << "Cores Used: " << coresUsed << "\n";
-	logFile << "CPU Utilization: " << fixed << std::setprecision(2) << cpuUtilization << "%\n";
-	logFile << "\n";
-
-	// Write running processes
-	logFile << "Running Processes:\n";
-	if (runningProcesses.empty()) {
-		logFile << "  None\n";
-	}
-	else {
-		for (const auto& [core, p] : runningProcesses) {
-			logFile << "  " << p->getName()
-				<< " " << getTimestamp()
-				<< " Core:" << core
-				<< "   " << p->getCommandCounter()
-				<< "/" << p->getLinesOfCode() << "\n";
-		}
-	}
-
-	logFile << "\n";
-
-	// Write finished processes
-	logFile << "Finished Processes:\n";
-	if (finishedProcesses.empty()) {
-		logFile << "  None\n";
-	}
-	else {
-		for (const auto& p : finishedProcesses) {
-			logFile << "  " << p.getName()
-				<< " (" << p.getCreationTimestamp() << ")"
-				<< " Finished   "
-				<< p.getLinesOfCode() << "/" << p.getLinesOfCode() << "\n";
-		}
-	}
-
-	logFile << border << "\n";
-	logFile.close();
-
-	std::cout << "Report saved to csopesy-log.txt\n";
+    lock_guard<mutex> lock(queueMutex);
+    ofstream logFile("csopesy-log.txt", ios::app);
+ 
+    if (!logFile.is_open()) {
+        std::cerr << "Error: Could not open csopesy-log.txt for writing.\n";
+        return;
+    }
+ 
+    string border = "================================";
+    string timestamp = getTimestamp();
+ 
+    int coresUsed = static_cast<int>(runningProcesses.size());
+    int coresAvailable = config.numCPU;
+    double cpuUtilization = (coresAvailable > 0)
+        ? (static_cast<double>(coresUsed) / static_cast<double>(coresAvailable)) * 100.0
+        : 0.0;
+ 
+    logFile << "\n" << border << "\n";
+    logFile << "SYSTEM REPORT " << timestamp << "\n";
+    logFile << border << "\n";
+    logFile << "Cores Available: " << coresAvailable << "\n";
+    logFile << "Cores Used: " << coresUsed << "\n";
+    logFile << "CPU Utilization: " << fixed << std::setprecision(2) << cpuUtilization << "%\n";
+    logFile << "\n";
+ 
+    logFile << "Running Processes:\n";
+    if (runningProcesses.empty()) {
+        logFile << "  None\n";
+    } else {
+        for (const auto& [core, p] : runningProcesses) {
+            logFile << "  " << p->getName()
+                    << " " << getTimestamp()
+                    << " Core:" << core
+                    << "   " << p->getCommandCounter()
+                    << "/" << p->getLinesOfCode() << "\n";
+        }
+    }
+ 
+    logFile << "\n";
+ 
+    logFile << "Finished Processes:\n";
+    if (finishedProcesses.empty()) {
+        logFile << "  None\n";
+    } else {
+        for (const auto& p : finishedProcesses) {
+            logFile << "  " << p->getName()
+                    << " (" << p->getCreationTimestamp() << ")"
+                    << " Finished   "
+                    << p->getLinesOfCode() << "/" << p->getLinesOfCode() << "\n";
+        }
+    }
+ 
+    logFile << border << "\n";
+    logFile.close();
+ 
+    std::cout << "Report saved to csopesy-log.txt\n";
 }

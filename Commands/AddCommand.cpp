@@ -1,6 +1,6 @@
 #include "AddCommand.hpp"
-#include "../process/Process.hpp"
-#include "../process/ProcessResolver.hpp"
+#include "../Process/Process.hpp"
+#include "../Process/ProcessResolver.hpp"
 #include <charconv>   // std::from_chars
 #include <cstdint>
 #include <string>

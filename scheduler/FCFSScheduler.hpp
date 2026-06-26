@@ -4,16 +4,16 @@
 #include <atomic>
 #include <mutex>
 #include <map>
-#include "../process/Process.hpp"
-#include "../process/ProcessResolver.hpp"
+#include "../Process/Process.hpp"
+#include "../Process/ProcessResolver.hpp"
 #include "../Scheduler/Scheduler.hpp"
 
 class FCFSScheduler : public Scheduler, public ProcessResolver {
 private:
     Process* getProcessOnCore(int coreId) override {
-        return runningProcesses[coreId];
+        auto it = runningProcesses.find(coreId);
+        return (it != runningProcesses.end()) ? it->second.get() : nullptr;
     }
-
 protected:
-    void runCycle() override;
+    void runCycle(int coreId) override;
 };

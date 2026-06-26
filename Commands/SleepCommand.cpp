@@ -1,6 +1,6 @@
 #include "SleepCommand.hpp"
-#include "../process/Process.hpp"
-#include "../process/ProcessResolver.hpp"
+#include "../Process/Process.hpp"
+#include "../Process/ProcessResolver.hpp"
 #include <string>
 #include <chrono>
 #include <thread>

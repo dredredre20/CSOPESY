@@ -4,13 +4,13 @@
 
 class ProcessConsole : public AConsole{
     private:
+        std::shared_ptr<Process> activeProcess;
         void printProcessInfo() const;
-        std::shared_ptr<Process> attachedProcess;
         bool refreshed = false;
 
     public:
-        ProcessConsole(std::shared_ptr<Process> process, std::string process_name);
-
+        ProcessConsole(std::shared_ptr<Process> process, std::string name);
+        
         void onEnabled() override;
         void display() override;
         void process() override;

@@ -1,6 +1,6 @@
 #include "DeclareCommand.hpp"
-#include "../process/Process.hpp"
-#include "../process/ProcessResolver.hpp"
+#include "../Process/Process.hpp"
+#include "../Process/ProcessResolver.hpp"
 
 DeclareCommand::DeclareCommand(int p_id, std::string processName, std::string varName, uint16_t value, ProcessResolver& resolver)
     : ICommand(p_id, DECLARE), resolver(resolver) {

@@ -1,6 +1,6 @@
 #pragma once
 #include "ICommand.hpp"
-#include "../process/ProcessResolver.hpp"
+#include "../Process/ProcessResolver.hpp"
 #include <string>
 
 class AddCommand : public ICommand {

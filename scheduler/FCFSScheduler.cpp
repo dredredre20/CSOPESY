@@ -1,5 +1,5 @@
 #include "FCFSScheduler.hpp"
-#include "../process/Process.hpp"
+#include "../Process/Process.hpp"
 #include <vector>
 #include <thread>
 #include <chrono>
@@ -12,52 +12,41 @@
 
 using namespace std;
 
-void FCFSScheduler::runCycle() {
+void FCFSScheduler::runCycle(int coreId) {
     while (running) {
-        Process* currentProcess = nullptr;
-        int assignedCore = -1;
+        std::shared_ptr<Process> currentProcess = nullptr;
 
         {
-        // Pop the next process from the queue
             lock_guard<mutex> lock(queueMutex);
-            for (int core = 0; core < config.numCPU; ++core) {
-                if (!processQueues[core].empty() && runningProcesses.find(core) == runningProcesses.end()) 
-                {
-                    currentProcess = new Process(processQueues[core].front());
-                    processQueues[core].erase(processQueues[core].begin());
-                    assignedCore = core;
-                    break;
-                }
+            // Only pick a process for this core if it is idle
+            if (!processQueues[coreId].empty() &&
+                runningProcesses.find(coreId) == runningProcesses.end())
+            {
+                currentProcess = processQueues[coreId].front();
+                processQueues[coreId].erase(processQueues[coreId].begin());
             }
         }
 
         if (currentProcess) {
-            currentProcess->setCPUCoreID(assignedCore);
+            currentProcess->setCPUCoreID(coreId);
 
-            // Track process as running 
             {
                 lock_guard<mutex> lock(queueMutex);
-                runningProcesses[assignedCore] = currentProcess;
+                runningProcesses[coreId] = currentProcess;
             }
 
-            // Loop through the commands one by one
             while (!currentProcess->isFinished()) {
-                currentProcess->executeCurrentCommand(assignedCore);
+                currentProcess->executeCurrentCommand(coreId);
                 currentProcess->moveToNextLine();
-
-                // simulate command execution by adding a 0.5 second delay
                 this_thread::sleep_for(chrono::milliseconds(500));
             }
 
-            // Remove from active processes and add to finished processes
             {
                 lock_guard<mutex> lock(queueMutex);
-                runningProcesses.erase(assignedCore);
-                finishedProcesses.push_back(*currentProcess);
+                runningProcesses.erase(coreId);
+                finishedProcesses.push_back(currentProcess);
             }
-            delete currentProcess;
-        }
-        else {
+        } else {
             this_thread::sleep_for(chrono::milliseconds(50));
         }
     }

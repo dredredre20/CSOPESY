@@ -10,7 +10,7 @@ class MainMenuConsole : public AConsole{
         void handleInitializeCommand();
         void handleExitCommand();
         void handleScreenSCommand(const std::string &input); 
-        void handleScreenRCommand();
+        void handleScreenRCommand(const std::string &input);
         void handleSchedulerStartCommand();
         void handleSchedulerStopCommand();
         void handleReportUtilCommand();

@@ -20,8 +20,10 @@ class ConsoleManager{
         void drawConsole() const;
         void process() const;
         void switchConsole(std::string consoleName);
+        bool hasScreen(std::string consoleName) const;
+
         
-        void registerScreen(std::shared_ptr<BaseScreen> screenRef);
+        void registerScreen(std::shared_ptr<AConsole> screenRef);
         void switchToScreen(std::string screenName);
         void unregisterScreen(std::string screenName);
 

@@ -6,13 +6,12 @@
 #include "ConsoleUI/ConsoleManager.hpp"
 #include "Scheduler/FCFSScheduler.hpp"
 #include "Design_Utils/DesignAssets.hpp"
-#include "InstructionManager/InstructionManager.hpp"
 
 int main() {
     ConsoleManager::initialize();
     bool keepRunning = true;
     ConsoleManager* console_manager = ConsoleManager::getInstance();
-    
+
     // The loop runs until keepRunning returns false
     while (keepRunning) {
         console_manager -> process();
