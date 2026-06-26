@@ -14,7 +14,12 @@ add_executable(MyProject
     Commands/PrintCommand.cpp
     SymbolTable/SymbolTable.cpp
     Scheduler/Scheduler.cpp 
-    Scheduler/RRScheduler.cpp)
+    Scheduler/RRScheduler.cpp
+    ConsoleUI/ConsoleManager.cpp
+    ConsoleUI/AConsole.hpp
+    ConsoleUI/MainMenuConsole.cpp
+    ConsoleUI/ProcessConsole.cpp
+    )
 
 # Optional: include directories
 # target_include_directories(MyProject PRIVATE include/)
