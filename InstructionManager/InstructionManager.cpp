@@ -200,8 +200,75 @@ bool InstructionManager::processCommand() {
         scheduler->screenLs();
     }
 
-    else if (command == "screen -s") {
-        // TODO: Implement screen -s
+    else if (command.rfind("screen -s ", 0) == 0) {
+        // Extract process name from input
+        std::string processName = command.substr(10);
+
+        // Create a new process with the provided name
+        static int nextProcessId = 1000; // Start custom process IDs at 1000
+
+        // change this to find name in the ready queue for avoiding duplicates instead of random name
+        Process newProcess(nextProcessId++, processName);
+
+        for (int i = 0; i < 100; ++i) {
+            if (i % 2 == 0) {
+                newProcess.addCommand(ICommand::PRINT);
+            }
+            else if (i % 3 == 0) {
+                newProcess.addCommand(ICommand::SLEEP);
+            }
+            else if (i % 5 == 0) {
+                newProcess.addCommand(ICommand::DECLARE);
+            }
+            else if (i % 7 == 0) {
+                newProcess.addCommand(ICommand::ADD);
+            }
+            else {
+                newProcess.addCommand(ICommand::FOR);
+            }
+        }
+
+        // Add the process to the scheduler
+        scheduler->addProcess(newProcess);
+
+        // now attach to the newly created process (same as screen -r)
+        Process* target = scheduler->findProcessByName(processName);
+
+        if (target == nullptr) {
+            std::cout << "Failed to create or attach to process " << processName << ".\n";
+        }
+        else {
+            system("cls");
+            std::cout << "Successfully created and attached to process: " << processName << "\n\n";
+
+            std::string screenCmd;
+            while (true) {
+                std::cout << "root:\\> ";
+                std::getline(std::cin, screenCmd);
+
+                if (screenCmd == "process-smi") {
+                    std::cout << "Process name: " << target->getName() << "\n";
+                    std::cout << "ID: " << target->getPID() << "\n";
+                    std::cout << "Logs:\n";
+                    // TODO: print logs here
+
+                    if (target->isFinished()) {
+                        std::cout << "Finished!\n";
+                    }
+                    else {
+                        std::cout << "Current instruction line: " << target->getCommandCounter() << "\n";
+                        std::cout << "Lines of code: " << target->getLinesOfCode() << "\n";
+                    }
+                }
+                else if (screenCmd == "exit") {
+                    system("cls");
+                    break;
+                }
+                else {
+                    std::cout << "Unknown command.\n";
+                }
+            }
+        }
     }
 
     else if (command.rfind("screen -r ", 0) == 0) {
