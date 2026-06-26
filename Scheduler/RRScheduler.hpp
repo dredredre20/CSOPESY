@@ -10,8 +10,11 @@ public:
 
 protected:
     void runCycle() override;
-    Process* getProcessOnCore(int coreId) override;
+    //Process* getProcessOnCore(int coreId) override;
 
 private:
+    Process* getProcessOnCore(int coreId) override {
+        return runningProcesses[coreId];
+    }
     int timeSlice;
 };

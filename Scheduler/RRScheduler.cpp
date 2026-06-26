@@ -5,6 +5,7 @@
 
 using namespace std;
 
+/*
 Process* RRScheduler::getProcessOnCore(int coreId) {
     lock_guard<mutex> lock(queueMutex);
     auto it = runningProcesses.find(coreId);
@@ -13,6 +14,7 @@ Process* RRScheduler::getProcessOnCore(int coreId) {
     }
     return nullptr;
 }
+*/
 
 void RRScheduler::runCycle() {
     while (running) {
