@@ -3,25 +3,24 @@
 #include <string>
 #include <cstdlib>
 #include <vector>
-
+#include "ConsoleUI/ConsoleManager.hpp"
 #include "Scheduler/FCFSScheduler.hpp"
 #include "Design_Utils/DesignAssets.hpp"
 #include "InstructionManager/InstructionManager.hpp"
 
 int main() {
-
+    ConsoleManager::initialize();
     bool keepRunning = true;
-
-    designAssets da;
-    da.welcomeMenu();
+    ConsoleManager* console_manager = ConsoleManager::getInstance();
     
-    InstructionManager instManager; // declare 4 cores
-
-    // The loop runs until processCommand() returns false
+    // The loop runs until keepRunning returns false
     while (keepRunning) {
-        // Loop continues
-        keepRunning = instManager.processCommand();
+        console_manager -> process();
+
+        keepRunning = ConsoleManager::getInstance() -> isRunning();
     }
+
+    ConsoleManager::destroy(); // Destroy console manager instance before exiting
 
     return 0;
 }
