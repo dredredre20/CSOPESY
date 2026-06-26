@@ -206,6 +206,14 @@ void MainMenuConsole::handleInitializeCommand() {
 
     this->scheduler->initialize(config);
     this->initialized = true;
+
+    if (!this->scheduler) {
+        std::cout << "Error: Scheduler not initialized.\n";
+        return;
+    }
+
+    runningProcesses = true;
+    scheduler->start();  // start the scheduler as soon as it is initialized
     std::cout << "Successfully initialized from: " << found.string() << std::endl;
 }
 
@@ -257,32 +265,25 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
     std::string processName = input.substr(10);
     processName.erase(std::remove(processName.begin(), processName.end(), '\''), processName.end());
 
-    std::cout << "[DEBUG] Attempting to attach to screen: '" << processName << "'..." << std::endl;
     
     auto manager = ConsoleManager::getInstance();
 
     // Check if the screen is already registered
     if (manager->hasScreen(processName)) {
-        std::cout << "[DEBUG] Screen '" << processName << "' already exists in ConsoleManager. Switching..." << std::endl;
         manager->switchToScreen(processName);
     } 
     // Otherwise, look for it in the scheduler
-    else {
-        std::cout << "[DEBUG] Screen not in manager. Searching Scheduler for process '" << processName << "'..." << std::endl;
-        
+    else {        
         std::shared_ptr<Process> target = scheduler->findProcessByName(processName);
         
         if (target != nullptr) {
-            std::cout << "[DEBUG] Process found in scheduler! Creating new ProcessConsole." << std::endl;
             
             // Create the console on the fly
             auto pConsole = std::make_shared<ProcessConsole>(target, processName);
             manager->registerScreen(pConsole);
             
-            std::cout << "[DEBUG] ProcessConsole registered. Switching to screen..." << std::endl;
             manager->switchToScreen(processName);
         } else {
-            std::cout << "[DEBUG] Process '" << processName << "' not found in Ready, Running, or Finished queues." << std::endl;
             std::cout << "Error: Process '" << processName << "' not found.\n";
         }
     }
@@ -291,14 +292,6 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
 
 // Logic for handling the scheduler -start command
 void MainMenuConsole::handleSchedulerStartCommand() {
-    if (!this->scheduler) {
-        std::cout << "Error: Scheduler not initialized.\n";
-        return;
-    }
-
-    runningProcesses = true;
-    scheduler->start();  // start threads first
-
     // Generate processes on a detached thread so CLI stays responsive
     std::thread([this]() {
         generateProcesses(*this->scheduler, 50, this->config);

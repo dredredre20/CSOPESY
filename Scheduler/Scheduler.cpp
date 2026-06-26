@@ -84,6 +84,8 @@ void Scheduler::screenLs() {
 
 std::shared_ptr<Process> Scheduler::findProcessByName(const std::string& name) {
 	lock_guard<mutex> lock(queueMutex);
+
+    // Search the RQ
 	for (auto& queue : processQueues) {
         for (auto& process : queue) {
             if (process->getName() == name) {
@@ -91,7 +93,12 @@ std::shared_ptr<Process> Scheduler::findProcessByName(const std::string& name) {
             }
         }
     }
-    return nullptr;
+
+    // Search the running processes
+    for (const auto& [core, process] : runningProcesses) {
+            if (process->getName() == name) return process;
+            
+    }    return nullptr;
 }
 
 void Scheduler::reportUtil() {
