@@ -38,9 +38,20 @@ void ConsoleManager::switchConsole(std::string consoleName){
     if (this->consoleTable.find(consoleName) != consoleTable.end()){
         // clear screen
         std::cout << "\033[2J\033[1;1H";
-        this -> previousConsole = this -> currentConsole;
-        this -> currentConsole = this -> consoleTable[consoleName];
-        this -> currentConsole -> onEnabled();
+
+        // for initializing the main menu at the start
+        if (this -> previousConsole == nullptr){
+            this -> currentConsole = this -> consoleTable[consoleName];
+            this -> currentConsole -> onEnabled();
+        }
+
+        // for switching the console
+        else{
+            this -> previousConsole = this -> currentConsole;
+            this -> currentConsole = this -> consoleTable[consoleName];
+            this -> currentConsole -> onEnabled();
+        }
+
     }
 
     else{
@@ -48,6 +59,8 @@ void ConsoleManager::switchConsole(std::string consoleName){
     }
 }
 
+
+// to be removed
 void ConsoleManager::registerScreen(std::shared_ptr<AConsole> screenRef){
     if (this->consoleTable.find(screenRef->getName()) != consoleTable.end()){
         std::cerr << "Screen name " << screenRef->getName() << " already exists. Please use a different name." << std::endl;
@@ -57,38 +70,34 @@ void ConsoleManager::registerScreen(std::shared_ptr<AConsole> screenRef){
     this->consoleTable[screenRef->getName()] = screenRef;
 }
 
-void ConsoleManager::switchToScreen(std::string screenName){
-    if (this -> consoleTable.find(screenName) != consoleTable.end()){
-        // clear screen
-        std::cout << "\033[2J\033[1;1H";
-        this->previousConsole = this->currentConsole;
-        this->currentConsole = this->consoleTable[screenName];
-        this->currentConsole-> onEnabled();
-    }
-
-    else{
-        std::cerr << "Screen name " << screenName << "not found. Was it initialized?" << std::endl;
+void ConsoleManager::attachProcess(std::shared_ptr<Process> process) {
+    auto it = consoleTable.find(PROCESS_CONSOLE);
+    if (it != consoleTable.end()) {
+        auto processConsole = std::dynamic_pointer_cast<ProcessConsole>(it->second);
+        if (processConsole) processConsole->setProcess(process);
     }
 }
 
-void ConsoleManager::unregisterScreen(std::string screenName){
-    if (this->consoleTable.find(screenName) != consoleTable.end()){
-        this->consoleTable.erase(screenName);
-    }
-
-    else{
-        std::cerr << "Unable to register " << screenName << ". Was it initiliazed?" << std::endl;
+void ConsoleManager::detachProcess() {
+    auto it = consoleTable.find(PROCESS_CONSOLE);
+    if (it != consoleTable.end()) {
+        auto processConsole = std::dynamic_pointer_cast<ProcessConsole>(it->second);
+        if (processConsole) processConsole->setProcess(nullptr);
     }
 }
 
 ConsoleManager::ConsoleManager(){
     this->running = true;
     
-    // initialize the main menu console
+    // initialize the consoles
     const std::shared_ptr<MainMenuConsole> mainMenuConsole = std::make_shared<MainMenuConsole>();
+    
+    // default process to null and process name as blank
+    const std::shared_ptr<ProcessConsole> processConsole = std::make_shared<ProcessConsole>(nullptr, "");
 
     // store to console table
     this->consoleTable[MAIN_MENU_CONSOLE] = mainMenuConsole;
+    this->consoleTable[PROCESS_CONSOLE] = processConsole;
 
     // first console is the main menu
     this->switchConsole(MAIN_MENU_CONSOLE);

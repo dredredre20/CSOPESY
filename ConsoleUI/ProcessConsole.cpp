@@ -10,7 +10,7 @@
 
 
 ProcessConsole::ProcessConsole(std::shared_ptr<Process> process, std::string name)
-    : AConsole(name), activeProcess(process) {}
+    : AConsole(PROCESS_CONSOLE) {}
 
 void ProcessConsole::onEnabled(){
     this->display();
@@ -22,7 +22,7 @@ void ProcessConsole::process(){
         this -> printProcessInfo();
     }
 
-    std::cout << "root:\\>";
+    std::cout << "\nroot:\\>";
 
     // Read user input
     std::string command;
@@ -33,7 +33,7 @@ void ProcessConsole::process(){
     } 
     
     else if (command == "exit") {
-        ConsoleManager::getInstance()->returnToPreviousConsole();
+        ConsoleManager::getInstance()->switchConsole(MAIN_MENU_CONSOLE);
     }
 }
 
@@ -50,22 +50,29 @@ void ProcessConsole::printProcessInfo() {
         oss << timestamp << " Core:" << activeProcess->getCPUCoreID();
         std::string formattedLog = oss.str();
 
-        std::cout << "Process Name: " << this->name << std::endl;
-        std::cout << "ID: " << activeProcess->getPID() << std::endl;
-        std::cout << "Logs: \n" << formattedLog << std::endl;
-        std::cout << "\nCurrent Instruction line: " << activeProcess ->getCommandCounter() << std::endl;
-        std::cout << "Lines of code: " << activeProcess -> getLinesOfCode();
-        std::cout << "\n\n";
-
-        // append log
+        // Append then print all logs
         this->logs.push_back(formattedLog);
+
+        std::cout << "\nProcess Name: " << activeProcess->getName() << std::endl;
+        std::cout << "ID: " << activeProcess->getPID() << std::endl;
+        std::cout << "\nCurrent Instruction line: " << activeProcess->getCommandCounter() << std::endl;
+        std::cout << "Lines of code: " << activeProcess->getLinesOfCode() << "\n\n";
+
+        std::cout << "Logs:\n";
+        for (const auto& log : this->logs) {
+            std::cout << log << "\n";
+        }
     }
 
-    if (activeProcess -> getCommandCounter() == activeProcess ->getLinesOfCode() ){
+    if (activeProcess && activeProcess->isFinished()) {
         std::cout << "\nFinished!\n";
     }
+}
 
-
+void ProcessConsole::setProcess(std::shared_ptr<Process> process) {
+    this->activeProcess = process;
+    this->refreshed = false;
+    this->logs.clear();
 }
 
 std::string ProcessConsole::getTimestamp() {

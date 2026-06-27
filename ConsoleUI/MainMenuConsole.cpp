@@ -252,12 +252,13 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);
 
-    auto pConsole = std::make_shared<ProcessConsole>(newProcess, processName);
-
-    // Register and Switch
     auto manager = ConsoleManager::getInstance();
-    manager->registerScreen(pConsole);
-    manager->switchToScreen(processName);
+
+    // Attach the process to the process console
+    manager->attachProcess(newProcess);
+
+    manager->switchConsole(PROCESS_CONSOLE);
+
 }
 
 // Logic for handling the screen -r command 
@@ -265,27 +266,22 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
     std::string processName = input.substr(10);
     processName.erase(std::remove(processName.begin(), processName.end(), '\''), processName.end());
 
-    
-    auto manager = ConsoleManager::getInstance();
+    // Check if the process exists (either running or in ready queue)
+    std::shared_ptr<Process> process = scheduler->findProcessByName(processName);
 
-    // Check if the screen is already registered
-    if (manager->hasScreen(processName)) {
-        manager->switchToScreen(processName);
-    } 
-    // Otherwise, look for it in the scheduler
+    // If it exists
+    if (process != nullptr){
+        auto manager = ConsoleManager::getInstance();
+        // Attach the process to the process console
+        manager->attachProcess(process);
+
+        // Switch console
+        manager->switchConsole(PROCESS_CONSOLE);
+    }
+
+    // Otherwise
     else {        
-        std::shared_ptr<Process> target = scheduler->findProcessByName(processName);
-        
-        if (target != nullptr) {
-            
-            // Create the console on the fly
-            auto pConsole = std::make_shared<ProcessConsole>(target, processName);
-            manager->registerScreen(pConsole);
-            
-            manager->switchToScreen(processName);
-        } else {
-            std::cout << "Error: Process '" << processName << "' not found.\n";
-        }
+        std::cerr << "Error: Process '" << processName << "' not found.\n";
     }
 }
 

@@ -11,6 +11,7 @@ class ProcessConsole : public AConsole{
         void display() override;
         void process() override;
         static std::string getTimestamp(); 
+        void setProcess(std::shared_ptr<Process> process);
         
     private:
         std::shared_ptr<Process> activeProcess;

@@ -1,7 +1,6 @@
 #pragma once
 #include "AConsole.hpp"
 #include <unordered_map>
-#include "BaseScreen.hpp"
 #include "MainMenuConsole.hpp"
 #include "ProcessConsole.hpp"
 
@@ -22,7 +21,9 @@ class ConsoleManager{
         void switchConsole(std::string consoleName);
         bool hasScreen(std::string consoleName) const;
 
-        
+        void attachProcess(std::shared_ptr<Process> process);
+        void detachProcess();
+
         void registerScreen(std::shared_ptr<AConsole> screenRef);
         void switchToScreen(std::string screenName);
         void unregisterScreen(std::string screenName);
