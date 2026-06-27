@@ -258,6 +258,11 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
 
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);
+    
+    // Wait until scheduler assigns a core
+    while (newProcess->getCPUCoreID() == -1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
 
     auto manager = ConsoleManager::getInstance();
 

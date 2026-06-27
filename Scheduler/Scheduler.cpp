@@ -45,41 +45,53 @@ string Scheduler::getTimestamp() {
 
 void Scheduler::screenLs() {
     lock_guard<mutex> lock(queueMutex);
-    std::string border = "--------------------------------";
-
-    // Print current running processes
+ 
+    string border = "================================";
+    string timestamp = getTimestamp();
+ 
+    int coresUsed = static_cast<int>(runningProcesses.size());
+    int coresAvailable = config.numCPU;
+    double cpuUtilization = (coresAvailable > 0)
+        ? (static_cast<double>(coresUsed) / static_cast<double>(coresAvailable)) * 100.0
+        : 0.0;
+ 
+    cout << "\n" << border << "\n";
+    cout << "SYSTEM REPORT " << timestamp << "\n";
+    cout << border << "\n";
+    cout << "Cores Available: " << coresAvailable << "\n";
+    cout << "Cores Used: " << coresUsed << "\n";
+    cout << "CPU Utilization: " << fixed << std::setprecision(2) << cpuUtilization << "%\n";
     cout << "\n";
-    cout << border;
-    cout << "\nRunning Processes:\n";
+ 
+    cout << "Running Processes:\n";
     if (runningProcesses.empty()) {
-        cout << "\n";
-    }
-    else {
+        cout << "  None\n";
+    } else {
         for (const auto& [core, p] : runningProcesses) {
-            cout << p->getName()
-                << getTimestamp()
-                << " Core:" << core
-                << "   " << p->getCommandCounter()
-                << "/" << p->getLinesOfCode() << "\n";
+            cout  << "  " << p->getName()
+                  << " " << getTimestamp()
+                  << " Core:" << core
+                  << "   " << p->getCommandCounter()
+                  << "/" << p->getLinesOfCode() << "\n";
         }
     }
-
-    // Print history log of finished processes
-    cout << "\nFinished Processes:\n";
-    if (finishedProcesses.empty()) {
-        cout << "\n";
-    }
-	else{
-		for (const auto& p : finishedProcesses) {
-			cout << p->getName()
-				<< " (" << p->getCreationTimestamp() << ")"
-				<< " Finished   "
-				<< p->getLinesOfCode() << "/" << p->getLinesOfCode() << "\n";
-		}
-	}
-    cout << border;
+ 
     cout << "\n";
-}
+ 
+    cout << "Finished Processes:\n";
+    if (finishedProcesses.empty()) {
+        cout << "  None\n";
+    } else {
+        for (const auto& p : finishedProcesses) {
+            cout << "  " << p->getName()
+                 << " (" << p->getCreationTimestamp() << ")"
+                 << " Finished   "
+                 << p->getLinesOfCode() << "/" << p->getLinesOfCode() << "\n";
+        }
+    }
+ 
+    cout << border << "\n";
+ }
 
 std::shared_ptr<Process> Scheduler::findProcessByName(const std::string& name) {
 	lock_guard<mutex> lock(queueMutex);
