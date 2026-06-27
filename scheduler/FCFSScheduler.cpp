@@ -1,13 +1,7 @@
 #include "FCFSScheduler.hpp"
-#include "../Process/Process.hpp"
-#include <vector>
 #include <thread>
 #include <chrono>
-#include <fstream>
-#include <algorithm>
 #include <mutex>
-#include <sstream>
-#include <iomanip>
 #include <iostream>
 
 using namespace std;
