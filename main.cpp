@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
+#include <ctime>
 #include <vector>
 #include "ConsoleUI/ConsoleManager.hpp"
 #include "Scheduler/FCFSScheduler.hpp"
@@ -12,6 +13,7 @@ int main() {
     bool keepRunning = true;
     ConsoleManager* console_manager = ConsoleManager::getInstance();
 
+    srand(static_cast<unsigned>(time(nullptr))); // seed for randomization
     // The loop runs until keepRunning returns false
     while (keepRunning) {
         console_manager -> process();

@@ -1,14 +1,15 @@
 #pragma once
 #include "ICommand.hpp"
-#include "../Process/ProcessResolver.hpp"
-#include <string>
+#include <cstdint>
 
 class SleepCommand : public ICommand {
 public:
-    SleepCommand(int p_id, std::string processName, uint8_t X, ProcessResolver& resolver);
-    void execute(int coreId) override;
+    // ticks: number of CPU ticks to sleep (uint8, so 0-255)
+    explicit SleepCommand(uint8_t ticks) : ticks(ticks) {}
+
+    void execute(int coreID, Process& process) override;
+    CommandType getCommandType() const override { return SLEEP; }
 
 private:
-    std::string processName;
-    ProcessResolver& resolver;
+    uint8_t ticks;
 };

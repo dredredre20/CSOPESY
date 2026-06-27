@@ -1,22 +1,16 @@
 #include "ForCommand.hpp"
-#include "../Process/Process.hpp"
-#include "../Process/ProcessResolver.hpp"
-#include <string>
-#include <vector>
+#include "../process/Process.hpp"
+#include <sstream>
 
-ForCommand::ForCommand(int p_id, std::string processName, std::vector<std::shared_ptr<ICommand>> commandList, int repeats, ProcessResolver& resolver)
-    : ICommand(p_id, ADD), resolver(resolver) {
-    this->processName = processName;
-    this->commandList = commandList;
-    this->repeats = repeats;
-}
+void ForCommand::execute(int coreID, Process& process) {
+    if (depth > MAX_DEPTH) return;
 
-// Creates a text file to save the process logs
-// 
-void ForCommand::execute(int coreId) {
-    for (int i = 0; i < repeats; i++) {
-        for (const auto& command: commandList) {
-            command->execute(coreId);
+    for (int i = 0; i < iterations; ++i) {
+        if (process.isSleeping()) break;
+
+        for (auto& cmd : body) {
+            if (process.isSleeping()) break;
+            cmd->execute(coreID, process);
         }
     }
 }

@@ -102,27 +102,9 @@ static void generateProcesses(Scheduler& scheduler, int numProcesses, const Conf
         std::string name = "process" + std::string(i < 10 ? "0" : "") + std::to_string(i);
         std::shared_ptr<Process> p = std::make_shared<Process>(i, name);
 
-        for (int j = 0; j < 100; ++j) {
+        int numInstructions = cfg.minIns + (rand() % (cfg.maxIns - cfg.minIns + 1));
 
-            if (j % 2 == 0) {
-                p->addCommand(ICommand::PRINT);
-            }
-            else if (j % 3 == 0) {
-                p->addCommand(ICommand::SLEEP);
-            }
-            else if (j % 5 == 0) {
-                p->addCommand(ICommand::DECLARE);
-            }
-            else if (j % 7 == 0) {
-                p->addCommand(ICommand::ADD);
-            }
-            else if (j % 11 == 0) {
-                p->addCommand(ICommand::SUBTRACT);
-            }
-            else {
-                p->addCommand(ICommand::FOR);
-            }
-        }
+        p->generateInstructions(numInstructions);
         scheduler.addProcess(p);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(cfg.batchFreq * 100));
@@ -246,9 +228,10 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
     // Create the process
     static int nextProcessId = 1;
     auto newProcess = std::make_shared<Process>(nextProcessId++, processName);
+    int numInstructions = config.minIns + (rand() % (config.maxIns - config.minIns + 1));
 
     // Populate with dummy commands
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numInstructions; ++i) {
         if (i % 2 == 0) newProcess->addCommand(ICommand::PRINT);
         else if (i % 3 == 0) newProcess->addCommand(ICommand::SLEEP);
         else if (i % 5 == 0) newProcess->addCommand(ICommand::DECLARE);

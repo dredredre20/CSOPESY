@@ -9,8 +9,12 @@ add_executable(MyProject
     Process/Process.cpp
     Scheduler/FCFSScheduler.cpp
     Design_Utils/DesignAssets.cpp 
-    Commands/ICommand.cpp
     Commands/PrintCommand.cpp
+    Commands/DeclareCommand.cpp
+    Commands/AddCommand.cpp
+    Commands/SubtractCommand.cpp
+    Commands/ForCommand.cpp
+    Commands/SleepCommand.cpp
     SymbolTable/SymbolTable.cpp
     Scheduler/Scheduler.cpp 
     Scheduler/RRScheduler.cpp

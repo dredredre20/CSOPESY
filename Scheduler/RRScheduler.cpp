@@ -19,7 +19,7 @@ void RRScheduler::runCycle(int coreId) {
                 processQueues[coreId].erase(processQueues[coreId].begin());
             }
         }
-
+        
         if (currentProcess) {
             currentProcess->setCPUCoreID(coreId);
 
@@ -30,9 +30,21 @@ void RRScheduler::runCycle(int coreId) {
 
             // Execute up to timeSlice commands
             for (int tick = 0; tick < timeSlice && !currentProcess->isFinished(); ++tick) {
+                
+                if (currentProcess->isSleeping()) {
+                    uint8_t ticks = currentProcess->getSleepTicks();
+                    if (ticks > 0) {
+                        currentProcess->setSleepTicks(ticks - 1);
+                    }
+                    else {
+                        currentProcess->wake();
+                    }
+                    break;
+                }
+                
                 currentProcess->executeCurrentCommand(coreId);
                 currentProcess->moveToNextLine();
-                this_thread::sleep_for(chrono::milliseconds(500));
+                this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
             {

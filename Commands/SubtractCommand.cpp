@@ -1,43 +1,25 @@
 #include "SubtractCommand.hpp"
 #include "../Process/Process.hpp"
-#include "../Process/ProcessResolver.hpp"
-#include <charconv>   // std::from_chars
-#include <cstdint>
-#include <string>
+#include <limits>
 
-SubtractCommand::SubtractCommand(int p_id, std::string processName, std::string varNameD, std::string value1, std::string value2, ProcessResolver& resolver)
-    : ICommand(p_id, ADD), resolver(resolver) {
-    this->processName = processName;
-    this->varNameD = varNameD;
-    this->value1 = value1;
-    this->value2 = value2;
+void SubtractCommand::execute(int coreID, Process& process) {
+    uint32_t valA = resolve(a, process);
+    uint32_t valB = resolve(b, process);
+
+    // Clamp to 0, no negative
+    uint16_t res = static_cast<uint16_t>(valA >= valB ? valA - valB : 0);
+
+    if (!process.hasVariable(result))
+        process.setVariable(result, 0);
+    process.setVariable(result, res);
 }
 
-// Creates a text file to save the process logs
-// 
-void SubtractCommand::execute(int coreId) {
-    // 1. Access process
-    Process* process = resolver.getProcessOnCore(coreId);
+uint32_t SubtractCommand::resolve(const Operand& operand, Process& process) const {
+    if (std::holds_alternative<uint16_t>(operand))
+        return std::get<uint16_t>(operand);
 
-    // 2. Check our inputs (to see if they are variable names/uint_16t)
-    uint16_t operand1 = resolveOperand(process, value1);
-    uint16_t operand2 = resolveOperand(process, value2);
-
-    uint16_t buffer = operand1 - operand2; // consider overflow handling, see below
-    process->symbolTable_setVar(varNameD, buffer);
-}
-
-uint16_t SubtractCommand::resolveOperand(Process* process, const std::string& token) {
-    uint16_t parsed = 0;
-    auto result = std::from_chars(token.data(), token.data() + token.size(), parsed);
-
-    bool isWholeStringNumeric =
-        result.ec == std::errc() && result.ptr == token.data() + token.size();
-
-    if (isWholeStringNumeric) {
-        return parsed; // it was a literal, e.g. "42"
-    }
-
-    // Not a number → treat it as a variable name and look it up.
-    return process->symbolTable_getVar(token);
+    const std::string& varName = std::get<std::string>(operand);
+    if (!process.hasVariable(varName))
+        process.setVariable(varName, 0);
+    return static_cast<uint32_t>(process.getVariable(varName));
 }

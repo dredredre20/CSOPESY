@@ -1,18 +1,23 @@
 #pragma once
 #include "ICommand.hpp"
-#include "../Process/ProcessResolver.hpp"
 #include <string>
+#include <variant>
+#include <cstdint>
 
 class SubtractCommand : public ICommand {
 public:
-    SubtractCommand(int p_id, std::string processName, std::string varNameD, std::string value1, std::string value2, ProcessResolver& resolver);
-    void execute(int coreId) override;
-    uint16_t resolveOperand(Process* process, const std::string& token);
+    using Operand = std::variant<std::string, uint16_t>;
+
+    SubtractCommand(const std::string& result, Operand a, Operand b)
+        : result(result), a(a), b(b) {
+    }
+
+    void execute(int coreID, Process& process) override;
+    CommandType getCommandType() const override { return SUBTRACT; }
 
 private:
-    std::string processName;
-    std::string varNameD;
-    std::string value1;
-    std::string value2;
-    ProcessResolver& resolver;
+    std::string result;
+    Operand a, b;
+
+    uint32_t resolve(const Operand& operand, Process& process) const;
 };

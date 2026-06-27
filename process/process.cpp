@@ -1,6 +1,11 @@
 #include "Process.hpp"
 #include "../SymbolTable/SymbolTable.hpp"
+#include "../Commands/DeclareCommand.hpp"
 #include "../Commands/PrintCommand.hpp"
+#include "../Commands/AddCommand.hpp"
+#include "../Commands/SubtractCommand.hpp"
+#include "../Commands/ForCommand.hpp"
+#include "../Commands/SleepCommand.hpp"
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -13,6 +18,7 @@ Process::Process(int p_id, std::string name) {
     this->commandCounter = 0;
     this->currentState = ProcessState::READY;
     this->creationTimestamp = makeTimestamp();
+    this->sleeping = false;
 }
 
 std::string Process::makeTimestamp() {
@@ -35,36 +41,177 @@ void Process::addCommand(ICommand::CommandType commandType) {
     }
 
     // Extend for future command implementations
+    else if (commandType == ICommand::DECLARE) {
+        // Randomize variable name from a pool and initial uint16 value
+        std::string varName = randomVarName();
+        uint16_t initVal = static_cast<uint16_t>(rand() % std::numeric_limits<uint16_t>::max());
+        const std::shared_ptr<ICommand> declare =
+            std::make_shared<DeclareCommand>(varName, initVal);
+        this->commandList.push_back(declare);
+    }
+
+    else if (commandType == ICommand::ADD) {
+        // result = varA + varB (all from symbol table, auto-declared if missing)
+        std::string result = randomVarName();
+        AddCommand::Operand a = randomOperand();
+        AddCommand::Operand b = randomOperand();
+        const std::shared_ptr<ICommand> add =
+            std::make_shared<AddCommand>(result, a, b);
+        this->commandList.push_back(add);
+    }
+
+    else if (commandType == ICommand::SUBTRACT) {
+        std::string result = randomVarName();
+        SubtractCommand::Operand a = randomOperand();
+        SubtractCommand::Operand b = randomOperand();
+        const std::shared_ptr<ICommand> subtract =
+            std::make_shared<SubtractCommand>(result, a, b);
+        this->commandList.push_back(subtract);
+    }
+   
+    else if (commandType == ICommand::SLEEP) {
+        // Random sleep between 1-255 ticks (uint8)
+        uint8_t ticks = static_cast<uint8_t>((rand() % 255) + 1);
+        const std::shared_ptr<ICommand> sleep =
+            std::make_shared<SleepCommand>(ticks);
+        this->commandList.push_back(sleep);
+    }
+
+    else if (commandType == ICommand::FOR) {
+        // Build a randomized FOR body
+        const std::shared_ptr<ICommand> forCmd = buildForCommand(1);
+        this->commandList.push_back(forCmd);
+    }
+}
+
+void Process::generateInstructions(int numInstructions) {
+    // Pre-initialize
+    symbolTable.setVar("x", 0);
+    symbolTable.setVar("y", 0);
+    symbolTable.setVar("z", 0);
+
+    for (int i = 0; i < numInstructions; ++i) {
+        // ADD(x, x, 1)
+        commandList.push_back(std::make_shared<AddCommand>(
+            "x", std::string("x"), uint16_t(1)));
+        // PRINT("Hello world from <name>!")
+        commandList.push_back(std::make_shared<PrintCommand>(
+            this->p_id, this->name,
+            "Hello world from " + this->name + "!"));
+        // ADD(y, y, 1)
+        commandList.push_back(std::make_shared<AddCommand>(
+            "y", std::string("y"), uint16_t(1)));
+        // PRINT
+        commandList.push_back(std::make_shared<PrintCommand>(
+            this->p_id, this->name,
+            "Hello world from " + this->name + "!"));
+        // ADD(z, z, 1)
+        commandList.push_back(std::make_shared<AddCommand>(
+            "z", std::string("z"), uint16_t(1)));
+        // PRINT
+        commandList.push_back(std::make_shared<PrintCommand>(
+            this->p_id, this->name,
+            "Hello world from " + this->name + "!"));
+    }
 }
 
 // Execute the command pointed to by commandCounter
 void Process::executeCurrentCommand(int coreId) {
-    if (this->commandCounter < static_cast<int>(this->commandList.size())) {
-        this->commandList[this->commandCounter]->execute(coreId);
-    } else {
+    if (isFinished()) {
         std::cerr << "Error: Process " << this->p_id
-                   << " attempted to execute past its command list bounds.\n";
+            << " attempted to execute past its command list bounds.\n";
+        return;
+    }
+    if (!sleeping) {
+        commandList[commandCounter]->execute(coreId, *this);
     }
 }
 
 // Move instruction pointer to the next command line
 void Process::moveToNextLine() {
-    if (!isFinished()) {
-        this->commandCounter++;
+    if (isFinished()) return;
 
-        if (isFinished()) {
-            this->currentState = ProcessState::FINISHED;
-        }
+    if (sleeping) {
+        wake();
+        return;
+    }
+
+    this->commandCounter++;
+    if (isFinished()) {
+        this->currentState = ProcessState::FINISHED;
     }
 }
 
-void Process::symbolTable_setVar(std::string varName, uint16_t value) {
-    this->symbolTable.setVar(varName, value);
+// Picks a random variable name from a fixed pool
+std::string Process::randomVarName() const {
+    static const std::vector<std::string> pool = { "x", "y", "z", "a", "b", "c" };
+    return pool[rand() % pool.size()];
 }
 
+// Randomly returns either a variable name or a uint16 constant
+AddCommand::Operand Process::randomOperand() const {
+    if (rand() % 2 == 0) {
+        return randomVarName();
+    }
+    else {
+        return static_cast<uint16_t>(rand() % std::numeric_limits<uint16_t>::max());
+    }
+}
 
-uint16_t Process::symbolTable_getVar(std::string varName) {
-    return this->symbolTable.getVar(varName);
+// Recursively builds a FOR command up to MAX_DEPTH
+std::shared_ptr<ICommand> Process::buildForCommand(int depth) {
+    std::vector<std::shared_ptr<ICommand>> body;
+
+    int bodySize = (rand() % 4) + 2;
+    for (int i = 0; i < bodySize; ++i) {
+        // Randomly pick a non-FOR command for the body
+        int roll = rand() % (depth < ForCommand::MAX_DEPTH ? 5 : 4);
+        switch (roll) {
+        case 0: {
+            std::string toPrint = "Hello world from " + this->name + "!";
+            body.push_back(std::make_shared<PrintCommand>(
+                this->p_id, this->name, toPrint));
+            break;
+        }
+        case 1: {
+            std::string varName = randomVarName();
+            uint16_t initVal = static_cast<uint16_t>(rand() % std::numeric_limits<uint16_t>::max());
+            body.push_back(std::make_shared<DeclareCommand>(varName, initVal));
+            break;
+        }
+        case 2: {
+            body.push_back(std::make_shared<AddCommand>(
+                randomVarName(), randomOperand(), randomOperand()));
+            break;
+        }
+        case 3: {
+            body.push_back(std::make_shared<SubtractCommand>(
+                randomVarName(), randomOperand(), randomOperand()));
+            break;
+        }
+        case 4: {
+            // increment depth
+            body.push_back(buildForCommand(depth + 1));
+            break;
+        }
+        }
+    }
+
+    // Random iterations between 1-10
+    int iterations = (rand() % 10) + 1;
+    return std::make_shared<ForCommand>(std::move(body), iterations, depth);
+}
+
+void Process::setVariable(const std::string& varName, uint16_t value) {
+    symbolTable.setVar(varName, value);
+}
+
+uint16_t Process::getVariable(const std::string& varName) const {
+    return symbolTable.getVar(varName);
+}
+
+bool Process::hasVariable(const std::string& varName) const {
+    return symbolTable.hasVar(varName);
 }
 
 bool Process::isFinished() const {

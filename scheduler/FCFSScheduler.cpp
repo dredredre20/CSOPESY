@@ -30,9 +30,22 @@ void FCFSScheduler::runCycle(int coreId) {
             }
 
             while (!currentProcess->isFinished()) {
+
+                if (currentProcess->isSleeping()) {
+                    uint8_t ticks = currentProcess->getSleepTicks();
+                    if (ticks > 0) {
+                        currentProcess->setSleepTicks(ticks - 1);
+                    }
+                    else {
+                        currentProcess->wake();
+                    }
+                    this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
+                    continue;
+                }
+
                 currentProcess->executeCurrentCommand(coreId);
                 currentProcess->moveToNextLine();
-                this_thread::sleep_for(chrono::milliseconds(500));
+                this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
             {
