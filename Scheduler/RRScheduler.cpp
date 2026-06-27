@@ -38,8 +38,10 @@ void RRScheduler::runCycle(int coreId) {
                     }
                     else {
                         currentProcess->wake();
+                        currentProcess->moveToNextLine();
                     }
-                    break;
+                    this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
+                    continue;
                 }
                 
                 currentProcess->executeCurrentCommand(coreId);

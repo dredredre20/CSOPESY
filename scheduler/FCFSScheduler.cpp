@@ -38,6 +38,7 @@ void FCFSScheduler::runCycle(int coreId) {
                     }
                     else {
                         currentProcess->wake();
+                        currentProcess->moveToNextLine();
                     }
                     this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
                     continue;

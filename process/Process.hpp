@@ -19,7 +19,6 @@ public:
 
     Process(int p_id, std::string name);
 
-    void addCommand(ICommand::CommandType commandType);
     void generateInstructions(int numInstructions);
 
     // Executes the command currently pointed to by commandCounter on the given core.
@@ -70,12 +69,5 @@ private:
     uint8_t sleepTicksRemaining = 0;
 
     SymbolTable symbolTable;
-
-    static std::string makeTimestamp();
-
-    // For randomized variables
-    std::string randomVarName() const;
-    AddCommand::Operand randomOperand() const;
-    std::shared_ptr<ICommand> buildForCommand(int depth);
     std::vector<std::string> logs;
 };

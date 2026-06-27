@@ -43,7 +43,7 @@ void ProcessConsole::printProcessInfo() {
     if (activeProcess) {
         std::string timestamp = getTimestamp();
         std::ostringstream oss;
-        oss << timestamp << " Core: " << activeProcess->getCPUCoreID();
+        oss << timestamp << " Core:" << activeProcess->getCPUCoreID() << " ";
 
         std::cout << "\nProcess Name: " << activeProcess->getName() << std::endl;
         std::cout << "ID: " << activeProcess->getPID() << std::endl;
@@ -52,7 +52,7 @@ void ProcessConsole::printProcessInfo() {
 
         std::cout << "Logs:\n";
         for (const auto& log : activeProcess->getLogs()) {  // read from process
-            std::cout << log << "\n";
+            std::cout << oss.str() << log << "\n";
         }
     }
 
