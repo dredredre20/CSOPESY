@@ -50,10 +50,9 @@ void Scheduler::screenLs() {
     string timestamp = getTimestamp();
  
     int coresUsed = static_cast<int>(runningProcesses.size());
-    int coresAvailable = config.numCPU;
-    double cpuUtilization = (coresAvailable > 0)
-        ? (static_cast<double>(coresUsed) / static_cast<double>(coresAvailable)) * 100.0
-        : 0.0;
+    int coresAvailable = config.numCPU - coresUsed;
+    double cpuUtilization = (coresUsed/ config.numCPU) * 100.0; 
+
  
     cout << "\n" << border << "\n";
     cout << "SYSTEM REPORT " << timestamp << "\n";
@@ -125,11 +124,9 @@ void Scheduler::reportUtil() {
     string timestamp = getTimestamp();
  
     int coresUsed = static_cast<int>(runningProcesses.size());
-    int coresAvailable = config.numCPU;
-    double cpuUtilization = (coresAvailable > 0)
-        ? (static_cast<double>(coresUsed) / static_cast<double>(coresAvailable)) * 100.0
-        : 0.0;
- 
+    int coresAvailable = config.numCPU - coresUsed;
+    double cpuUtilization = (coresUsed/ config.numCPU) * 100.0; 
+
     logFile << "\n" << border << "\n";
     logFile << "SYSTEM REPORT " << timestamp << "\n";
     logFile << border << "\n";
