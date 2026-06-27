@@ -89,12 +89,11 @@ void MainMenuConsole::process(){
 
 
 
-// --------- Command Interpreter Implementation ---------
-// (Includes helper functions to process the commands)
+// Helper functions to process the commands
 
-static bool runningProcesses = true; // flag for controlling
+static bool runningProcesses = true; // flag for generating the dummy processes
 static void generateProcesses(Scheduler& scheduler, int numProcesses, const Config& cfg) {
-    // further checking needed
+    // further checking neededc
 
     for (int i = 1; i <= numProcesses; ++i) {
 
@@ -220,7 +219,15 @@ void MainMenuConsole::handleInitializeCommand() {
 
 // Logic for handling the exit command
 void MainMenuConsole:: handleExitCommand(){
-    std::cout << "Exiting application..." << std::endl;
+    if (!this->initialized){
+        // If scheduler hasn't been initialized, dont stop the scheduler
+        std::cout << "Exiting application..." << std::endl;
+    }
+
+    else{
+        scheduler->stop(); // stop the scheduler
+        std::cout << "Exiting application..." << std::endl;
+    }
     ConsoleManager::getInstance()->exitApplication();
 }
 
@@ -303,7 +310,6 @@ void MainMenuConsole::handleSchedulerStopCommand() {
         return;
     }
     runningProcesses = false;
-    scheduler->stop();
     std::cout << "Scheduler stopped.\n";
 }
 

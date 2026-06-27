@@ -27,7 +27,6 @@ void Scheduler::start() {
 }
 
 void Scheduler::stop() {
-    cout << "Stopping scheduler...\n";
     running = false;
     for (auto& t : cpuThreads)
         if (t.joinable()) t.join();

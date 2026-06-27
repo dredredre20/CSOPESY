@@ -37,7 +37,7 @@ void ConsoleManager::process() const{
 void ConsoleManager::switchConsole(std::string consoleName){
     if (this->consoleTable.find(consoleName) != consoleTable.end()){
         // clear screen
-        std::cout << "\033[2J\033[1;1H";
+        std::cout << "\033[2J\033[3J\033[1;1H";
 
         // for initializing the main menu at the start
         if (this -> previousConsole == nullptr){
@@ -109,7 +109,7 @@ bool ConsoleManager::hasScreen(std::string consoleName) const {
 
 void ConsoleManager::returnToPreviousConsole(){
     if (this->previousConsole != nullptr){
-        std::cout << "\033[2J\033[1;1H";
+        std::cout << "\033[2J\033[3J\033[1;1H";        
 
         // Swap current and previous console
         std::shared_ptr<AConsole> temp = this->currentConsole;

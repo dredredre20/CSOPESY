@@ -17,11 +17,6 @@ void ProcessConsole::onEnabled(){
 }
 
 void ProcessConsole::process(){
-    if (this->refreshed == false){
-        this -> refreshed = true;
-        this -> printProcessInfo();
-    }
-
     std::cout << "\nroot:\\>";
 
     // Read user input
@@ -39,7 +34,9 @@ void ProcessConsole::process(){
 
 void ProcessConsole::display(){
     // clear screen
-    std::cout << "\033[2J\033[1;1H";
+    std::cout << "\033[2J\033[3J\033[1;1H";
+
+    this -> printProcessInfo();
 }
 
 
