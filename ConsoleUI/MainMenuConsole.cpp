@@ -231,13 +231,7 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
     int numInstructions = config.minIns + (rand() % (config.maxIns - config.minIns + 1));
 
     // Populate with dummy commands
-    for (int i = 0; i < numInstructions; ++i) {
-        if (i % 2 == 0) newProcess->addCommand(ICommand::PRINT);
-        else if (i % 3 == 0) newProcess->addCommand(ICommand::SLEEP);
-        else if (i % 5 == 0) newProcess->addCommand(ICommand::DECLARE);
-        else if (i % 7 == 0) newProcess->addCommand(ICommand::ADD);
-        else newProcess->addCommand(ICommand::FOR);
-    }
+    newProcess->generateInstructions(numInstructions);
 
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);

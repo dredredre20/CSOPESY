@@ -59,7 +59,7 @@ void RRScheduler::runCycle(int coreId) {
                 }
             }
         } else {
-            this_thread::sleep_for(chrono::milliseconds(50));
+            this_thread::sleep_for(chrono::seconds(2));
         }
     }
 }

@@ -86,33 +86,55 @@ void Process::addCommand(ICommand::CommandType commandType) {
 }
 
 void Process::generateInstructions(int numInstructions) {
-    // Pre-initialize
     symbolTable.setVar("x", 0);
     symbolTable.setVar("y", 0);
     symbolTable.setVar("z", 0);
 
+    static const std::vector<std::string> vars = { "x", "y", "z" };
+
     for (int i = 0; i < numInstructions; ++i) {
-        // ADD(x, x, 1)
-        commandList.push_back(std::make_shared<AddCommand>(
-            "x", std::string("x"), uint16_t(1)));
-        // PRINT("Hello world from <name>!")
-        commandList.push_back(std::make_shared<PrintCommand>(
-            this->p_id, this->name,
-            "Hello world from " + this->name + "!"));
-        // ADD(y, y, 1)
-        commandList.push_back(std::make_shared<AddCommand>(
-            "y", std::string("y"), uint16_t(1)));
-        // PRINT
-        commandList.push_back(std::make_shared<PrintCommand>(
-            this->p_id, this->name,
-            "Hello world from " + this->name + "!"));
-        // ADD(z, z, 1)
-        commandList.push_back(std::make_shared<AddCommand>(
-            "z", std::string("z"), uint16_t(1)));
-        // PRINT
-        commandList.push_back(std::make_shared<PrintCommand>(
-            this->p_id, this->name,
-            "Hello world from " + this->name + "!"));
+        int roll = i % 6;  // cycles through 6 command types
+
+        switch (roll) {
+        case 0:
+            // ADD(x, x, 1)
+            commandList.push_back(std::make_shared<AddCommand>(
+                "x", std::string("x"), uint16_t(1)));
+            break;
+
+        case 1:
+            // SUB(y, y, 0) — effectively a no-op subtract, just to exercise the command
+            commandList.push_back(std::make_shared<SubtractCommand>(
+                "y", std::string("y"), uint16_t(0)));
+            break;
+
+        case 2:
+            // DECLARE z with a cycling value
+            commandList.push_back(std::make_shared<DeclareCommand>(
+                vars[i % 3], static_cast<uint16_t>(i * 3)));
+            break;
+
+        case 3:
+            // PRINT with variable value
+            commandList.push_back(std::make_shared<PrintCommand>(
+                this->p_id, this->name,
+                "Hello world from " + this->name + "! x=",
+                std::string("x")));   // prints x's current value
+            break;
+
+        case 4:
+            // ADD(z, x, y)
+            commandList.push_back(std::make_shared<AddCommand>(
+                "z", std::string("x"), std::string("y")));
+            break;
+
+        case 5:
+            // PRINT without variable
+            commandList.push_back(std::make_shared<PrintCommand>(
+                this->p_id, this->name,
+                "Hello world from " + this->name + "!"));
+            break;
+        }
     }
 }
 
