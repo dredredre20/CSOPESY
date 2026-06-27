@@ -51,6 +51,9 @@ public:
     std::string getName() const;
     std::string getCreationTimestamp() const;
 
+    void addLog(const std::string& entry) { logs.push_back(entry); }
+    const std::vector<std::string>& getLogs() const { return logs; }
+
 private:
     int p_id;
     std::string name;
@@ -74,4 +77,5 @@ private:
     std::string randomVarName() const;
     AddCommand::Operand randomOperand() const;
     std::shared_ptr<ICommand> buildForCommand(int depth);
+    std::vector<std::string> logs;
 };

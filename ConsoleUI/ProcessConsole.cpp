@@ -2,7 +2,6 @@
 #include "ConsoleManager.hpp"
 #include <chrono>
 #include "../Scheduler/Scheduler.hpp"
-#include <chrono>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -44,11 +43,7 @@ void ProcessConsole::printProcessInfo() {
     if (activeProcess) {
         std::string timestamp = getTimestamp();
         std::ostringstream oss;
-        oss << timestamp << " Core:" << activeProcess->getCPUCoreID();
-        std::string formattedLog = oss.str();
-
-        // Append then print all logs
-        this->logs.push_back(formattedLog);
+        oss << timestamp << " Core: " << activeProcess->getCPUCoreID();
 
         std::cout << "\nProcess Name: " << activeProcess->getName() << std::endl;
         std::cout << "ID: " << activeProcess->getPID() << std::endl;
@@ -56,7 +51,7 @@ void ProcessConsole::printProcessInfo() {
         std::cout << "Lines of code: " << activeProcess->getLinesOfCode() << "\n\n";
 
         std::cout << "Logs:\n";
-        for (const auto& log : this->logs) {
+        for (const auto& log : activeProcess->getLogs()) {  // read from process
             std::cout << log << "\n";
         }
     }
@@ -69,7 +64,7 @@ void ProcessConsole::printProcessInfo() {
 void ProcessConsole::setProcess(std::shared_ptr<Process> process) {
     this->activeProcess = process;
     this->refreshed = false;
-    this->logs.clear();
+    //activeProcess->logs.clear();
 }
 
 std::string ProcessConsole::getTimestamp() {

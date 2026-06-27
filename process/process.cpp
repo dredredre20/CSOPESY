@@ -6,6 +6,7 @@
 #include "../Commands/SubtractCommand.hpp"
 #include "../Commands/ForCommand.hpp"
 #include "../Commands/SleepCommand.hpp"
+#include "../ConsoleUI/ProcessConsole.hpp"
 #include <chrono>
 #include <ctime>
 #include <iomanip>

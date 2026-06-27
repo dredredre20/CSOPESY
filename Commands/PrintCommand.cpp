@@ -33,5 +33,5 @@ void PrintCommand::execute(int coreId, Process& process) {
         oss << toPrint;
     }
 
-    //process.addLog(oss.str());
+    process.addLog(oss.str());
 }

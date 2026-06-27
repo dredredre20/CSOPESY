@@ -17,5 +17,4 @@ class ProcessConsole : public AConsole{
         std::shared_ptr<Process> activeProcess;
         void printProcessInfo();
         bool refreshed = false;
-        std::vector<std::string> logs;
 };

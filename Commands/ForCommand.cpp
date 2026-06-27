@@ -5,6 +5,10 @@
 void ForCommand::execute(int coreID, Process& process) {
     if (depth > MAX_DEPTH) return;
 
+    std::ostringstream oss;
+    oss << " \"FOR " << iterations << " iteration(s) [depth=" << depth << "]\"";
+    process.addLog(oss.str());
+
     for (int i = 0; i < iterations; ++i) {
         if (process.isSleeping()) break;
 

@@ -2,6 +2,7 @@
 #include "../Process/Process.hpp"
 #include <algorithm>
 #include <limits>
+#include <sstream>
 
 void AddCommand::execute(int coreID, Process& process) {
     uint32_t valA = resolve(a, process);
@@ -17,6 +18,10 @@ void AddCommand::execute(int coreID, Process& process) {
     if (!process.hasVariable(result))
         process.setVariable(result, 0);
     process.setVariable(result, res);
+
+    std::ostringstream oss;
+    oss << " \"ADD " << result << " = " << valA << " + " << valB << " -> " << res << "\"";
+    process.addLog(oss.str());
 }
 
 uint32_t AddCommand::resolve(const Operand& operand, Process& process) const {
