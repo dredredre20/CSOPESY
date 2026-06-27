@@ -1,5 +1,5 @@
-#include "../process/Process.hpp"
-#include "../scheduler/Scheduler.hpp"
+#include "../Process/Process.hpp"
+#include "../Scheduler/Scheduler.hpp"
 #include "PrintCommand.hpp"
 #include <fstream>
 #include <chrono>
