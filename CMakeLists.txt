@@ -22,6 +22,7 @@ add_executable(MyProject
     ConsoleUI/AConsole.hpp
     ConsoleUI/MainMenuConsole.cpp
     ConsoleUI/ProcessConsole.cpp
+    Memory/FlatMemoryAllocator.cpp
     )
 
 # Optional: include directories
