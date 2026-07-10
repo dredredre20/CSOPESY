@@ -167,9 +167,9 @@ void MainMenuConsole::handleInitializeCommand() {
         else if (key == "min-ins") file >> config.minIns;
         else if (key == "max-ins") file >> config.maxIns;
         else if (key == "delay-per-exec") file >> config.delayPerExec;
-        else if (key == "max_overall_mem") file >> config.maxOverallMem;
-        else if (key == "mem_per_frame") file >> config.memPerFrame;
-        else if (key == "mem_per_proc") file >> config.memPerProc;
+        else if (key == "max-overall-mem") file >> config.maxOverallMem;
+        else if (key == "mem-per-frame") file >> config.memPerFrame;
+        else if (key == "mem-per-proc") file >> config.memPerProc;
         else {
             std::string skip; file >> skip;
         }
