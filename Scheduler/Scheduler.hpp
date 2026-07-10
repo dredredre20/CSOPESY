@@ -1,10 +1,12 @@
 #pragma once
 #include "../Config.hpp"
 #include "../Process/Process.hpp"
+#include "../Memory/IMemoryAllocator.hpp"
 #include <mutex>
 #include <vector>
 #include <thread>
 #include <map>
+#include <memory>
 
 class Scheduler {
 public:
@@ -31,7 +33,13 @@ protected:
 	std::map<int, std::shared_ptr<Process>> runningProcesses;	
 	std::vector<std::shared_ptr<Process>> finishedProcesses;
 
+	std::unique_ptr<IMemoryAllocator> memoryAllocator;
+	int quantumReportCounter = 0;
 	std::mutex queueMutex;
+
+	bool tryAdmitProcess(const std::shared_ptr<Process>& process);
+	void releaseProcessMemory(const std::shared_ptr<Process>& process);
+	void writeQuantumReport();
 
 private:
 	std::vector<std::thread> cpuThreads;

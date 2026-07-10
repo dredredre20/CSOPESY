@@ -17,6 +17,11 @@ void RRScheduler::runCycle(int coreId) {
             {
                 currentProcess = processQueues[coreId].front();
                 processQueues[coreId].erase(processQueues[coreId].begin());
+
+                if (!tryAdmitProcess(currentProcess)) {
+                    processQueues[coreId].push_back(currentProcess);
+                    currentProcess.reset();
+                }
             }
         }
         
@@ -54,12 +59,15 @@ void RRScheduler::runCycle(int coreId) {
                 runningProcesses.erase(coreId);
 
                 if (currentProcess->isFinished()) {
+                    releaseProcessMemory(currentProcess);
                     finishedProcesses.push_back(currentProcess);
                 } else {
                     // Requeue the shared_ptr — no copy/slice of the Process object
                     processQueues[coreId].push_back(currentProcess);
                 }
             }
+
+            writeQuantumReport();
         } else {
             this_thread::sleep_for(chrono::seconds(2));
         }

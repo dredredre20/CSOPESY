@@ -18,6 +18,11 @@ void FCFSScheduler::runCycle(int coreId) {
             {
                 currentProcess = processQueues[coreId].front();
                 processQueues[coreId].erase(processQueues[coreId].begin());
+
+                if (!tryAdmitProcess(currentProcess)) {
+                    processQueues[coreId].push_back(currentProcess);
+                    currentProcess.reset();
+                }
             }
         }
 
@@ -52,6 +57,7 @@ void FCFSScheduler::runCycle(int coreId) {
             {
                 lock_guard<mutex> lock(queueMutex);
                 runningProcesses.erase(coreId);
+                releaseProcessMemory(currentProcess);
                 finishedProcesses.push_back(currentProcess);
             }
         } else {

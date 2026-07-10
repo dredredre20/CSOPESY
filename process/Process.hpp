@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <cstddef>
 #include "../Commands/ICommand.hpp"
 #include "../Commands/AddCommand.hpp"
 #include "../SymbolTable/SymbolTable.hpp"
@@ -50,6 +51,13 @@ public:
     std::string getName() const;
     std::string getCreationTimestamp() const;
 
+    void setMemoryRequirement(size_t requirement) { memoryRequirement = requirement; }
+    size_t getMemoryRequirement() const { return memoryRequirement; }
+    void setMemoryAllocatedBlock(void* block) { allocatedMemoryBlock = block; }
+    void* getMemoryAllocatedBlock() const { return allocatedMemoryBlock; }
+    bool isMemoryAllocated() const { return allocatedMemoryBlock != nullptr; }
+    void clearMemoryAllocation() { allocatedMemoryBlock = nullptr; }
+
     void addLog(const std::string& entry) { logs.push_back(entry); }
     const std::vector<std::string>& getLogs() const { return logs; }
 
@@ -67,6 +75,9 @@ private:
 
     bool sleeping = false;
     uint8_t sleepTicksRemaining = 0;
+
+    size_t memoryRequirement = 0;
+    void* allocatedMemoryBlock = nullptr;
 
     SymbolTable symbolTable;
     std::vector<std::string> logs;
