@@ -161,8 +161,8 @@ void Scheduler::writeQuantumReport() {
 
     report << "Timestamp: " << getTimestamp() << "\n";
     report << "Number of processes in memory: " << memoryResidentProcesses.size() << "\n";
-    report << "\nTotal external fragmentation in KB: " << externalFragmentation << "\n";
-    report << "----end---- = " << totalMemory << "\n\n";
+    report << "Total external fragmentation in KB: " << externalFragmentation << "\n";
+    report << "\n----end---- = " << totalMemory << "\n\n";
 
     for (const auto& block : blocks) {
         const size_t upperLimit = block.start + block.size;
