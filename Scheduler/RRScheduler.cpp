@@ -12,15 +12,30 @@ void RRScheduler::runCycle(int coreId) {
         {
             lock_guard<mutex> lock(queueMutex);
             // Only pick a process for this core if it is idle
-            if (!processQueues[coreId].empty() &&
-                runningProcesses.find(coreId) == runningProcesses.end())
-            {
-                currentProcess = processQueues[coreId].front();
-                processQueues[coreId].erase(processQueues[coreId].begin());
+            if (runningProcesses.find(coreId) == runningProcesses.end()) {
+                size_t attempts = processQueues[coreId].size();
+                bool memoryKnownFull = false;
 
-                if (!tryAdmitProcess(currentProcess)) {
-                    processQueues[coreId].push_back(currentProcess);
-                    currentProcess.reset();
+                for (size_t i = 0; i < attempts; ++i) {
+                    auto candidate = processQueues[coreId].front();
+                    processQueues[coreId].erase(processQueues[coreId].begin());
+
+                    if (candidate->isMemoryAllocated()) {
+                        currentProcess = candidate;
+                        break;
+                    } 
+                    
+                    if (memoryKnownFull) {
+                        processQueues[coreId].push_back(candidate);
+                        continue;
+                    }
+
+                    if (tryAdmitProcess(candidate)) {
+                        currentProcess = candidate;
+                        break;
+                    } else {
+                        processQueues[coreId].push_back(candidate);
+                    }
                 }
             }
         }
@@ -54,6 +69,9 @@ void RRScheduler::runCycle(int coreId) {
                 this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
+            // Keep the process in runningProcesses while writing the report
+            writeQuantumReport();
+
             {
                 lock_guard<mutex> lock(queueMutex);
                 runningProcesses.erase(coreId);
@@ -62,14 +80,11 @@ void RRScheduler::runCycle(int coreId) {
                     releaseProcessMemory(currentProcess);
                     finishedProcesses.push_back(currentProcess);
                 } else {
-                    // Requeue the shared_ptr — no copy/slice of the Process object
                     processQueues[coreId].push_back(currentProcess);
                 }
             }
-
-            writeQuantumReport();
         } else {
-            this_thread::sleep_for(chrono::seconds(2));
+            this_thread::sleep_for(chrono::milliseconds(100));
         }
     }
 }

@@ -32,6 +32,7 @@ protected:
 	std::vector<std::vector<std::shared_ptr<Process>>> processQueues;
 	std::map<int, std::shared_ptr<Process>> runningProcesses;	
 	std::vector<std::shared_ptr<Process>> finishedProcesses;
+	std::vector<std::shared_ptr<Process>> memoryResidentProcesses;
 
 	std::unique_ptr<IMemoryAllocator> memoryAllocator;
 	int quantumReportCounter = 0;

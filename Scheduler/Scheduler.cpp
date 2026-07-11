@@ -74,6 +74,7 @@ bool Scheduler::tryAdmitProcess(const std::shared_ptr<Process>& process) {
     }
 
     process->setMemoryAllocatedBlock(block);
+    memoryResidentProcesses.push_back(process);
     return true;
 }
 
@@ -84,6 +85,12 @@ void Scheduler::releaseProcessMemory(const std::shared_ptr<Process>& process) {
 
     memoryAllocator->deallocate(process->getMemoryAllocatedBlock());
     process->clearMemoryAllocation();
+
+    // remove from list of memory processes
+    memoryResidentProcesses.erase(
+        std::remove_if(memoryResidentProcesses.begin(), memoryResidentProcesses.end(),
+            [&](const std::shared_ptr<Process>& p) { return p == process; }),
+        memoryResidentProcesses.end());
 }
 
 void Scheduler::writeQuantumReport() {
@@ -123,21 +130,37 @@ void Scheduler::writeQuantumReport() {
         blocks.push_back({start, process->getMemoryRequirement(), process->getName()});
     };
 
-    for (const auto& [core, process] : runningProcesses) {
+    for (const auto& process : memoryResidentProcesses) {
         addAllocatedProcess(process);
-    }
-
-    for (const auto& queue : processQueues) {
-        for (const auto& process : queue) {
-            addAllocatedProcess(process);
-        }
     }
 
     std::sort(blocks.begin(), blocks.end(), [](const MemoryBlockView& a, const MemoryBlockView& b) {
         return a.start > b.start;
     });
 
+    size_t externalFragmentation = 0;
+    size_t cursor = 0;
+
+    for (const auto& block : blocks) {
+        if (block.start > cursor) {
+            size_t gap = block.start - cursor;
+            if (gap < config.memPerProc) {   // too small to hold any process
+                externalFragmentation += gap;
+            }
+        }
+        cursor = block.start + block.size;
+    }
+
+    // Trailing gap after the last block
+    if (cursor < totalMemory) {
+        size_t gap = totalMemory - cursor;
+        if (gap < config.memPerProc) {
+            externalFragmentation += gap;
+        }
+    }
+
     report << "Timestamp: " << getTimestamp() << "\n";
+    report << "Number of processes in memory: " << externalFragmentation << "\n";
     report << "\nTotal external fragmentation in KB: " << (totalMemory > allocatedMemory ? totalMemory - allocatedMemory : 0)
            << "\n";
     report << "----end---- = " << totalMemory << "\n\n";
