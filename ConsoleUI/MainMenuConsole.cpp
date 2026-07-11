@@ -295,6 +295,7 @@ void MainMenuConsole::handleSchedulerStopCommand() {
         return;
     }
     runningProcesses = false;
+    scheduler->stop();
     std::cout << "Scheduler stopped.\n";
 }
 
