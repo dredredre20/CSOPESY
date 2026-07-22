@@ -15,14 +15,16 @@ class PagingAllocator : public IMemoryAllocator {
         struct AllocationRecord {
             char* buffer;
             size_t sizeInBytes;
-            std::vector<size_t> frameIndices;
+            std::vector<MemoryBlock> frameBlocks;
         };
 
         std::map<long long, AllocationRecord> allocations;   // keyed by allocation id
         std::map<void*, long long> pointerToAllocationId;    // reverse lookup
         long long nextAllocationId;
 
-        std::vector<size_t> findFreeFrames(size_t count) const;
+        std::vector<MemoryBlock> findFreeFrames(size_t framesNeeded) const;
+
+        static size_t totalFrames(const std::vector<MemoryBlock>& blocks);
 
     public:
         PagingAllocator(size_t maximum_size, size_t frame_size);

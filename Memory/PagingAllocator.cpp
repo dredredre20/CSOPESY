@@ -20,15 +20,53 @@ PagingAllocator::~PagingAllocator() {
     }
 }
 
-std::vector<size_t> PagingAllocator::findFreeFrames(size_t count) const {
-    std::vector<size_t> free;
-    free.reserve(count);
-    for (size_t i = 0; i < numFrames && free.size() < count; ++i) {
-        if (frameOwner[i] == -1) {
-            free.push_back(i);
-        }
+size_t PagingAllocator::totalFrames(const std::vector<MemoryBlock>& blocks) {
+    size_t total = 0;
+    for (const auto& block : blocks) {
+        total += block.size;
     }
-    return free;
+    return total;
+}
+
+std::vector<PagingAllocator::MemoryBlock> PagingAllocator::findFreeFrames(size_t framesNeeded) const {
+    std::vector<MemoryBlock> freeBlocks;
+    size_t collected = 0;
+ 
+    size_t i = 0;
+    while (i < numFrames && collected < framesNeeded) {
+        // Skip occupied frames
+        if (frameOwner[i] != -1) {
+            ++i;
+            continue;
+        }
+ 
+        // A free frame ha sbeen found! Start a loop from here and measure how long this free frame is
+        size_t runStart = i;
+        size_t runLength = 0;
+        while (i < numFrames && frameOwner[i] == -1) {
+            ++runLength;
+            ++i;
+        }
+ 
+        // If more free frames than needed frames were found, reduce the target frames to the needed frames
+        size_t needed = framesNeeded - collected;
+        if (runLength > needed) {
+            runLength = needed;
+        }
+ 
+        // add the collected free blocks of memory
+        freeBlocks.push_back(MemoryBlock{runStart, runLength});
+
+        // increment the current collected memory so the while loops knows whether to tuloy or stop
+        collected += runLength;
+    }
+ 
+    // Edge case, not enough free frames
+    if (collected < framesNeeded) {
+        return {};
+    }
+ 
+    return freeBlocks;
 }
 
 void* PagingAllocator::allocate(size_t size) {
@@ -37,26 +75,23 @@ void* PagingAllocator::allocate(size_t size) {
     }
 
     size_t pagesNeeded = (size + frameSize - 1) / frameSize;
-    std::vector<size_t> freeFrames = findFreeFrames(pagesNeeded);
-    if (freeFrames.size() < pagesNeeded) {
+    std::vector<MemoryBlock> freeBlocks = findFreeFrames(pagesNeeded);
+    if (freeBlocks.empty() || totalFrames(freeBlocks) < pagesNeeded) {
         return nullptr; // Not enough free frames overall, even if scattered.
     }
 
     long long allocationId = nextAllocationId++;
-    for (size_t frameIndex : freeFrames) {
-        frameOwner[frameIndex] = allocationId;
+    for (const auto& block : freeBlocks) {
+        for (size_t frameIndex = block.start; frameIndex < block.start + block.size; ++frameIndex) {
+            frameOwner[frameIndex] = allocationId;
+        }
     }
 
-    // The frames backing this allocation can be scattered across physical
-    // memory (that's the entire point of paging), but the caller still
-    // needs one contiguous pointer to work with. We hand back a
-    // page-aligned buffer sized for the request; the frame table above is
-    // what tracks physical occupancy/fragmentation for accounting and
-    // visualization.
+    // grabbing scattered locations of process and compiling it into the AllocationRecord object
     size_t roundedSize = pagesNeeded * frameSize;
     char* buffer = new char[roundedSize];
 
-    AllocationRecord record{buffer, roundedSize, freeFrames};
+    AllocationRecord record{buffer, roundedSize, freeBlocks};
     allocations[allocationId] = record;
     pointerToAllocationId[static_cast<void*>(buffer)] = allocationId;
 
@@ -77,8 +112,10 @@ void PagingAllocator::deallocate(void* ptr) {
     long long allocationId = ptrIt->second;
     auto& record = allocations.at(allocationId);
 
-    for (size_t frameIndex : record.frameIndices) {
-        frameOwner[frameIndex] = -1;
+    for (const auto& block : record.frameBlocks) {
+        for (size_t frameIndex = block.start; frameIndex < block.start + block.size; ++frameIndex) {
+            frameOwner[frameIndex] = -1;
+        }
     }
 
     currentAllocatedSize -= record.sizeInBytes;
@@ -123,8 +160,13 @@ size_t PagingAllocator::getAllocationStart(const void* ptr) const {
     if (it == pointerToAllocationId.end()) {
         throw std::invalid_argument("Pointer does not correspond to an active allocation.");
     }
-
+ 
     const AllocationRecord& record = allocations.at(it->second);
-    size_t firstFrame = *std::min_element(record.frameIndices.begin(), record.frameIndices.end());
+ 
+    size_t firstFrame = record.frameBlocks.front().start;
+    for (const auto& block : record.frameBlocks) {
+        firstFrame = std::min(firstFrame, block.start);
+    }
+ 
     return firstFrame * frameSize;
 }
