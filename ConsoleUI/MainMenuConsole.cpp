@@ -84,6 +84,13 @@ void MainMenuConsole::process(){
         this -> handleScreenLsCommand();
     }
 
+    else if (command == "process-smi"){
+        this -> handleProcessSMICommand();
+    }
+
+    else if (command == "vmstat"){
+        this -> handleVmStatCommand();
+    }
 
 }
 
@@ -169,7 +176,8 @@ void MainMenuConsole::handleInitializeCommand() {
         else if (key == "delay-per-exec") file >> config.delayPerExec;
         else if (key == "max-overall-mem") file >> config.maxOverallMem;
         else if (key == "mem-per-frame") file >> config.memPerFrame;
-        else if (key == "mem-per-proc") file >> config.memPerProc;
+        else if (key == "min-mem-per-proc") file >> config.minMemPerProc;
+        else if (key == "max-mem-per-proc") file >> config.maxMemPerProc;
         else {
             std::string skip; file >> skip;
         }
@@ -224,11 +232,41 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
         return;
     }
 
-    // Extract the process name
-    std::string processName = input.substr(10);
-    processName.erase(std::remove(processName.begin(), processName.end(), '\''), processName.end());
-    
-    // Create the process
+    // Extract screen -s parameters
+    std::string args = input.substr(10);
+    args.erase(std::remove(args.begin(), args.end(), '\''), args.end());
+
+    // Split into process name and memory size
+    std::istringstream iss(args);
+    std::string processName;
+    std::string memorySizeStr;
+    iss >> processName >> memorySizeStr;
+
+    // Error handling when parameter is invalid
+    if (processName.empty() || memorySizeStr.empty()){
+        std::cout << "Error: Usage is 'screen -s <process_name> <process_memory_size>'.\n";
+        return;
+    }
+
+    // Validate memory size (should be a power of 2, in rage [2^6, 2^16])
+    size_t memorySize = 0;
+
+    try {
+        memorySize = std::stoul(memorySizeStr);
+    } catch (...) {
+        std::cout << "Error: Invalid memory allocation.\n";
+        return;
+    }
+
+    bool isPowerOfTwo = (memorySize > 0) && ((memorySize & (memorySize - 1)) == 0);
+    bool inRange = (memorySize >= 64 && memorySize <= 65536); // 2^6 to 2^16
+
+    if (!isPowerOfTwo || !inRange) {
+        std::cout << "invalid memory allocation\n";
+        return;
+    }
+
+    // Create the process and assign memory 
     static int nextProcessId = 1;
     auto newProcess = std::make_shared<Process>(nextProcessId++, processName);
     int numInstructions = config.minIns + (rand() % (config.maxIns - config.minIns + 1));
@@ -316,3 +354,20 @@ void MainMenuConsole::handleScreenLsCommand() {
     scheduler->screenLs();
 }
 
+
+// Logic for handling the process-smi command
+void MainMenuConsole::handleProcessSMICommand(){
+    std::cout << "process-smi";
+
+    std::cout << std::endl;
+    
+}
+
+
+// Logic for handling the vmstat command
+void MainMenuConsole::handleVmStatCommand(){
+    std::cout << "vmstat";
+
+    std::cout << std::endl;
+
+}

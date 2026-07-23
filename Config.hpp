@@ -12,5 +12,7 @@ struct Config {
 
 	int maxOverallMem = 0;
 	int memPerFrame = 0;
-	int memPerProc = 0;
+
+	int minMemPerProc = 0;
+	int maxMemPerProc = 0;
 };

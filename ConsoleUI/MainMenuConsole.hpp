@@ -15,6 +15,9 @@ class MainMenuConsole : public AConsole{
         void handleSchedulerStopCommand();
         void handleReportUtilCommand();
         void handleScreenLsCommand();
+        void handleProcessSMICommand();
+        void handleVmStatCommand();
+
 
         bool initialized = false;
         Config config;
