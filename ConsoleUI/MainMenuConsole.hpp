@@ -17,8 +17,7 @@ class MainMenuConsole : public AConsole{
         void handleScreenLsCommand();
         void handleProcessSMICommand();
         void handleVmStatCommand();
-
-
+        
         bool initialized = false;
         Config config;
         std::unique_ptr<Scheduler> scheduler;

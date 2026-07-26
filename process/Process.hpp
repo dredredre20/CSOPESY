@@ -15,7 +15,8 @@ public:
         READY,
         RUNNING,
         WAITING,
-        FINISHED
+        FINISHED,
+        TERMINATED_VIOLATION // shut down early due to memory access violation
     };
 
     Process(int p_id, std::string name);
@@ -61,6 +62,11 @@ public:
     void addLog(const std::string& entry) { logs.push_back(entry); }
     const std::vector<std::string>& getLogs() const { return logs; }
 
+    void setMemoryViolation(const std::string& timestamp, uintptr_t address);
+    bool hasMemoryViolation() const { return memoryViolationOccurred; }
+    std::string getViolationTimestamp() const { return violationTimestamp; }
+    uintptr_t getViolationAddress() const { return violationAddress; }
+
 private:
     int p_id;
     std::string name;
@@ -81,4 +87,8 @@ private:
 
     SymbolTable symbolTable;
     std::vector<std::string> logs;
+
+    bool memoryViolationOccurred = false;
+    std::string violationTimestamp;
+    uintptr_t violationAddress = 0;
 };

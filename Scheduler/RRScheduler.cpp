@@ -34,6 +34,7 @@ void RRScheduler::runCycle(int coreId) {
                         currentProcess = candidate;
                         break;
                     } else {
+                        memoryKnownFull = true;
                         processQueues[coreId].push_back(candidate);
                     }
                 }
@@ -69,8 +70,6 @@ void RRScheduler::runCycle(int coreId) {
                 this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
-            // Keep the process in runningProcesses while writing the report
-            writeQuantumReport();
 
             {
                 lock_guard<mutex> lock(queueMutex);

@@ -19,7 +19,10 @@ public:
 
 	void screenLs();
 	void reportUtil();
+	void visualizeMemory();
+
 	std::shared_ptr<Process> findProcessByName(const std::string& name);
+	size_t randomPowerofTwoMemSize() const;
 
 protected:
     virtual void runCycle(int coreId) = 0;
