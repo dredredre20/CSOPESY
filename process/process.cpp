@@ -23,27 +23,28 @@ Process::Process(int p_id, std::string name) {
 
 void Process::generateInstructions(int numInstructions) {
     symbolTable.setVar("x", 0);
-    symbolTable.setVar("y", 0);
-    symbolTable.setVar("z", 0);
+    //symbolTable.setVar("y", 0);
+    //symbolTable.setVar("z", 0);
 
-    static const std::vector<std::string> vars = { "x", "y", "z" };
+    static const std::vector<std::string> vars = { "x" };
 
     for (int i = 0; i < numInstructions; ++i) {
-        int roll = i % 7; // cycles through 7 slots
+        int roll = i % 2; // cycles through 7 slots
 
         switch (roll) {
         case 0:
-            // ADD(x, x, 1)
-            commandList.push_back(std::make_shared<AddCommand>(
-                "x", std::string("x"), uint16_t(1)));
+            // PRINT
+            commandList.push_back(std::make_shared<PrintCommand>(
+                this->p_id, this->name,
+                "Value of x: ", std::string("x")));
             break;
 
         case 1:
             // SUB(y, y, 0)
-            commandList.push_back(std::make_shared<SubtractCommand>(
-                "y", std::string("x"), uint16_t(1)));
+            commandList.push_back(std::make_shared<AddCommand>(
+                "x", std::string("x"), static_cast<uint16_t>((rand() % 10) + 1)));
             break;
-
+            /*
         case 2:
             // DECLARE
             commandList.push_back(std::make_shared<DeclareCommand>(
@@ -81,8 +82,8 @@ void Process::generateInstructions(int numInstructions) {
             commandList.push_back(std::make_shared<PrintCommand>(
                 this->p_id, this->name,
                 "Hello world from " + this->name + "!"));
-            break;
-        }
+            break; */
+        } 
     }
 }
 

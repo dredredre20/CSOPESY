@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <mutex>
 #include <cstddef>
 #include "../Commands/ICommand.hpp"
 #include "../Commands/AddCommand.hpp"
@@ -11,6 +12,8 @@
 class Process {
 
 public:
+    mutable std::mutex logMutex;
+
     enum ProcessState {
         READY,
         RUNNING,
@@ -59,8 +62,15 @@ public:
     bool isMemoryAllocated() const { return allocatedMemoryBlock != nullptr; }
     void clearMemoryAllocation() { allocatedMemoryBlock = nullptr; }
 
-    void addLog(const std::string& entry) { logs.push_back(entry); }
-    const std::vector<std::string>& getLogs() const { return logs; }
+    void addLog(const std::string& entry) {
+        std::lock_guard<std::mutex> lock(logMutex);
+        logs.push_back(entry);
+    }
+
+    const std::vector<std::string> getLogs() const {  // returns a copy, not a reference
+        std::lock_guard<std::mutex> lock(logMutex);
+        return logs;
+    }
 
     void setMemoryViolation(const std::string& timestamp, uintptr_t address);
     bool hasMemoryViolation() const { return memoryViolationOccurred; }
