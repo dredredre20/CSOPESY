@@ -10,7 +10,9 @@ public:
         ADD,
         SUBTRACT,
         SLEEP,
-        FOR
+        FOR, 
+        READ, 
+        WRITE
     };
 
     virtual ~ICommand() = default;

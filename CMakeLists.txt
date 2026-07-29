@@ -15,6 +15,8 @@ add_executable(MyProject
     Commands/SubtractCommand.cpp
     Commands/ForCommand.cpp
     Commands/SleepCommand.cpp
+    Commands/ReadCommand.cpp
+    Commands/WriteCommand.cpp
     SymbolTable/SymbolTable.cpp
     Scheduler/Scheduler.cpp 
     Scheduler/RRScheduler.cpp

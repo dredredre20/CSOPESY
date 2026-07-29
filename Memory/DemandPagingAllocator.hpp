@@ -53,6 +53,9 @@ private:
     // Rewrites the backing store file without the given process/page's entry,
     void removePageFromBackingStore(long long allocationId, size_t pageNum);
 
+	// Validates a single virtual address, faults in the page if necessary, and returns the corresponding physical address.
+	size_t resolvePhysicalAddress(void* ptr, long long allocationId, uintptr_t virtualAdrr);
+
     size_t numPagedIn = 0;  // total count of "page brought INTO memory" events
     size_t numPagedOut = 0; // total count of "page evicted OUT to backing store" events
 
@@ -71,6 +74,9 @@ public:
 
     // Function for demand paging: trigger's page fault
     void accessPage(void* ptr, size_t pageNum);
+
+	uint16_t readMemory(void* handle, uintptr_t address) override;
+	void writeMemory(void* handle, uintptr_t address, uint16_t value) override;
 
     size_t getNumPagedIn() const { return numPagedIn; }
     size_t getNumPagedOut() const { return numPagedOut; }

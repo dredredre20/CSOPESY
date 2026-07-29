@@ -8,6 +8,8 @@
 #include "../Commands/AddCommand.hpp"
 #include "../SymbolTable/SymbolTable.hpp"
 
+class IMemoryAllocator; // Forward declaration
+
 class Process {
 
 public:
@@ -67,6 +69,10 @@ public:
     std::string getViolationTimestamp() const { return violationTimestamp; }
     uintptr_t getViolationAddress() const { return violationAddress; }
 
+	// Memory allocator management
+	void setMemoryAllocator(IMemoryAllocator* allocator) { memoryAllocator = allocator; }
+	IMemoryAllocator* getMemoryAllocator() const { return memoryAllocator; }
+
 private:
     int p_id;
     std::string name;
@@ -91,4 +97,6 @@ private:
     bool memoryViolationOccurred = false;
     std::string violationTimestamp;
     uintptr_t violationAddress = 0;
+
+	IMemoryAllocator* memoryAllocator = nullptr; // Pointer to the memory allocator
 };

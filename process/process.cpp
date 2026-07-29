@@ -6,6 +6,8 @@
 #include "../Commands/SubtractCommand.hpp"
 #include "../Commands/ForCommand.hpp"
 #include "../Commands/SleepCommand.hpp"
+#include "../Commands/ReadCommand.hpp"
+#include "../Commands/WriteCommand.hpp"
 #include "../ConsoleUI/ProcessConsole.hpp"
 #include <chrono>
 #include <ctime>
@@ -27,9 +29,10 @@ void Process::generateInstructions(int numInstructions) {
     symbolTable.setVar("z", 0);
 
     static const std::vector<std::string> vars = { "x", "y", "z" };
+    static const uintptr_t sharedAddress = 0x10; // adjust if needed
 
     for (int i = 0; i < numInstructions; ++i) {
-        int roll = i % 7; // cycles through 7 slots
+        int roll = i % 9; // cycles through 7 slots
 
         switch (roll) {
         case 0:
@@ -81,6 +84,22 @@ void Process::generateInstructions(int numInstructions) {
             commandList.push_back(std::make_shared<PrintCommand>(
                 this->p_id, this->name,
                 "Hello world from " + this->name + "!"));
+            break;
+
+        case 7:
+			// READ command - reads from shared memory address into variable "x_mem"
+            commandList.push_back(std::make_shared<ReadCommand>(
+                ("x_mem"), sharedAddress
+            ));
+
+            break;
+
+        case 8:
+			// WRITE command - writes the value of x to shared memory address
+            commandList.push_back(std::make_shared<ReadCommand>(
+                sharedAddress, std::string("x") 
+            ));
+     
             break;
         }
     }
@@ -163,4 +182,12 @@ std::string Process::getName() const {
 
 std::string Process::getCreationTimestamp() const {
     return this->creationTimestamp;
+}
+
+// process is marked as terminated due to a memory access violation
+void Process::setMemoryViolation(const std::string& timestamp, uintptr_t address) {
+    memoryViolationOccurred = true;
+    violationTimestamp = timestamp;
+    violationAddress = address;
+    currentState = ProcessState::TERMINATED_VIOLATION;
 }

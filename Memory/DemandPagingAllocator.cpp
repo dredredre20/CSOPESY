@@ -257,3 +257,78 @@ size_t DemandPagingAllocator::getAllocatedSize() const {
 size_t DemandPagingAllocator::getFreeSize() const {
     return maximumSize - allocatedSize;
 }
+
+// Resolves a virtual address to a physical address, ensuring the page is in memory.
+size_t DemandPagingAllocator::resolvePhysicalAddress(void* ptr, long long allocationId, uintptr_t virtualAddr){
+    auto& record = allocations.at(allocationId);
+	size_t procSize = record.process->getMemoryRequirement();
+
+	// Check if the virtual address is within the bounds of the process's allocated memory
+	if (virtualAddr >= procSize) {
+		throw MemoryAccessViolationException(virtualAddr);
+	}
+    
+    // calculate the page number and offset to properly resolve the size of the address depending on the frame size
+	size_t pageNum = virtualAddr / frameSize;
+	size_t offset = virtualAddr % frameSize;
+
+	accessPage(ptr, pageNum); // ensure the page is in memory)
+
+	PTE& pte = record.pageTable[pageNum];
+	return pte.frameNumber * frameSize + offset; // physical address
+}
+
+
+// Reads a 16-bit value from the process's virtual address space, handling page faults as needed.
+uint16_t DemandPagingAllocator::readMemory(void* handle, uintptr_t address) {
+    auto it = pointerToAllocationId.find(handle);
+
+	if (it == pointerToAllocationId.end()) {
+		throw std::invalid_argument("Invalid process handle.");
+	}
+
+	// Get the allocation ID and corresponding record for the process
+    long long allocationId = it->second;
+    auto& record = allocations.at(allocationId);
+	size_t procSize = record.process->getMemoryRequirement();
+
+    if (address + 1 >= procSize) { // check if address still fits within the process's allocated space
+		throw MemoryAccessViolationException(address);
+    }
+
+	// calculate physical addresses for the two bytes to read
+	size_t physLow = resolvePhysicalAddress(handle, allocationId, address);
+	size_t physHigh = resolvePhysicalAddress(handle, allocationId, address + 1);
+
+	// Fetch bytes and combine them into a 16-bit value for better type safety and to avoid sign extension issues
+	uint8_t lowByte = static_cast<uint8_t>(physicalMemory[physLow]);
+	uint8_t highByte = static_cast<uint8_t>(physicalMemory[physHigh]);
+
+	return static_cast<uint16_t>(lowByte) | (static_cast<uint16_t>(highByte) << 8);
+}
+
+
+void DemandPagingAllocator::writeMemory(void* handle, uintptr_t address, uint16_t value) {
+    auto it = pointerToAllocationId.find(handle);
+    if (it == pointerToAllocationId.end()) {
+        throw std::invalid_argument("Invalid process handle.");
+    }
+
+    long long allocationId = it->second;
+    auto& record = allocations.at(allocationId);
+    size_t procSize = record.process->getMemoryRequirement();
+
+    if (address + 1 >= procSize) {
+        throw MemoryAccessViolationException(address);
+    }
+
+    // calculate physical addresses for the two bytes to read
+    size_t physLow = resolvePhysicalAddress(handle, allocationId, address);
+    size_t physHigh = resolvePhysicalAddress(handle, allocationId, address + 1);
+
+    // store the low and high bytes of the 16-bit value directly into the calculated physical addresses
+    // FF is used to mask the 8 bits since physicalMemory is a vector of char
+	physicalMemory[physLow] = static_cast<char>(value & 0xFF);
+	physicalMemory[physHigh] = static_cast<char>((value >> 8) & 0xFF);
+
+}

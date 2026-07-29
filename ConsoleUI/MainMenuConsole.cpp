@@ -5,6 +5,7 @@
 #include "../Scheduler/RRScheduler.hpp"
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
