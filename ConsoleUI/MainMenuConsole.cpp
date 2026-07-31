@@ -357,8 +357,16 @@ void MainMenuConsole::handleScreenLsCommand() {
 
 
 // Logic for handling the process-smi command
-void MainMenuConsole::handleProcessSMICommand(){
+void MainMenuConsole::handleProcessSMICommand() {
+
+    // Memory can be accessed through the scheduler, so call the SMI through there
     std::cout << "process-smi";
+
+    if (!this->scheduler) {
+        std::cout << "Error: Scheduler not initialized.\n";
+    } else {
+        this->scheduler->visualizeMemory();
+    }
 
     std::cout << std::endl;
     

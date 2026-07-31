@@ -4,6 +4,7 @@
 #include <fstream>
 #include <limits>
 #include <algorithm>
+#include <cmath>
 
 DemandPagingAllocator::DemandPagingAllocator(size_t maximumSize, size_t frameSize)
     : frameSize(frameSize),
@@ -229,7 +230,28 @@ void DemandPagingAllocator::deallocate(void* ptr) {
 // Debug/visualization helper -- prints overall usage and what's in each frame.
 std::string DemandPagingAllocator::visualizeMemory() {
     std::ostringstream oss;
-    oss << "Demand Paging Allocator [" << allocatedSize << "/" << maximumSize
+    oss << "\n\n--------------------------------------------------\n";
+    oss << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
+    oss << "--------------------------------------------------\n";
+
+    size_t currentAllocatedSize = this->getAllocatedSize();
+    size_t capacitySize = this->getCapacity();
+    long memory_util = std::round((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
+
+    oss << "CPU-Util: " << ""/*  */ << "\%\n";
+    oss << "Memory Usage: " << currentAllocatedSize << "MiB " << "/ " << capacitySize << "MiB\n"; // allocated / total memory
+    oss << "Memory Util: " << memory_util << "\%\n\n";
+
+    oss << "==================================================\n";
+    oss << "Running processes and memory usage:\n";
+    oss << "--------------------------------------------------\n";
+
+    // loop through each process
+
+    oss << "--------------------------------------------------\n";
+
+
+    /* oss << "Demand Paging Allocator [" << allocatedSize << "/" << maximumSize
         << " bytes used, " << numFrames << " frames of " << frameSize << " bytes each]\n";
     oss << "Pages in: " << numPagedIn << ", Pages out: " << numPagedOut << "\n";
 
@@ -241,7 +263,7 @@ std::string DemandPagingAllocator::visualizeMemory() {
             oss << "allocation #" << frameOwner[i] << " page " << framePage[i];
         }
         oss << "\n";
-    }
+    } */
     return oss.str();
 }
 
