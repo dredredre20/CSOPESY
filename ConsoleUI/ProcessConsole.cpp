@@ -59,6 +59,18 @@ void ProcessConsole::printProcessInfo() {
     if (activeProcess && activeProcess->isFinished()) {
         std::cout << "\nFinished!\n";
     }
+
+	// printed when process is already terminated due to memory access violation
+    if (activeProcess->getState() == Process::TERMINATED_VIOLATION){
+        std::cout << "\nProcess " << activeProcess->getName()
+            << " shut down due to memory access violation error that occurred at "
+            << activeProcess->getViolationTimestamp() << ". 0x"
+            << std::hex << activeProcess->getViolationAddress() << " invalid."
+            << std::dec << std::endl;
+
+        // not sure if we should exit the console yet 
+        // ConsoleManager::getInstance()->switchConsole(MAIN_MENU_CONSOLE);
+    }
 }
 
 void ProcessConsole::setProcess(std::shared_ptr<Process> process) {
