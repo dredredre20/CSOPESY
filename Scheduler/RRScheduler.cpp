@@ -42,6 +42,9 @@ void RRScheduler::runCycle(int coreId) {
         }
         
         if (currentProcess) {
+            // active tick
+            this->activeCPUTicks++;
+
             currentProcess->setCPUCoreID(coreId);
 
             {
@@ -83,6 +86,9 @@ void RRScheduler::runCycle(int coreId) {
                 }
             }
         } else {
+            // idle tick
+            this->idleCPUTicks++;
+
             this_thread::sleep_for(chrono::milliseconds(100));
         }
     }

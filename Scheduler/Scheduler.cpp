@@ -238,10 +238,22 @@ void Scheduler::reportUtil() {
 }
 
 // For debugging
-void Scheduler::visualizeMemory(std::string command) {
+void Scheduler::visualizeHighLevelMemory() {
     if (memoryAllocator) {
         std::string memVisual;
-        memVisual = memoryAllocator->visualizeMemory(command);
+        memVisual = memoryAllocator->visualizeHighLevelMemory();
+
+        std::cout << memVisual << std::endl;
+    } else {
+        std::cout << "No memory allocator initialized.\n";
+    }
+}
+
+// For debugging
+void Scheduler::visualizeDetailedMemory() {
+    if (memoryAllocator) {
+        std::string memVisual;
+        memVisual = memoryAllocator->visualizeDetailedMemory(this->activeCPUTicks, this->idleCPUTicks);
 
         std::cout << memVisual << std::endl;
     } else {

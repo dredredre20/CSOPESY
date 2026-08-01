@@ -364,7 +364,7 @@ void MainMenuConsole::handleProcessSMICommand() {
     if (!this->scheduler) {
         std::cout << "Error: Scheduler not initialized.\n";
     } else {
-        this->scheduler->visualizeMemory("process-smi");
+        this->scheduler->visualizeHighLevelMemory();
     }
 
     std::cout << std::endl;
@@ -378,7 +378,7 @@ void MainMenuConsole::handleVmStatCommand(){
     if (!this->scheduler) {
         std::cout << "Error: Scheduler not initialized.\n";
     } else {
-        this->scheduler->visualizeMemory("vmstat");
+        this->scheduler->visualizeDetailedMemory();
     }
 
     std::cout << std::endl;
