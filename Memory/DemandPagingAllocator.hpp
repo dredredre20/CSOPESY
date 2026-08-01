@@ -59,6 +59,8 @@ private:
     size_t numPagedIn = 0;  // total count of "page brought INTO memory" events
     size_t numPagedOut = 0; // total count of "page evicted OUT to backing store" events
 
+    mutable std::mutex allocatorMutex;
+
 public:
     DemandPagingAllocator(size_t maximumSize, size_t frameSize);
     ~DemandPagingAllocator() override;

@@ -33,65 +33,74 @@ DemandPagingAllocator::~DemandPagingAllocator() {
 // Loading pages into memory happens when accessPage() is 
 // called and triggers an actual page fault.
 void* DemandPagingAllocator::allocate(std::shared_ptr<Process> process) {
-    size_t size = process -> getMemoryRequirement();
+    {
+        std::lock_guard<std::mutex> lock(allocatorMutex);
+        
+        size_t size = process -> getMemoryRequirement();
 
-    if (size == 0 || size > maximumSize) {
-        return nullptr; 
+        if (size == 0 || size > maximumSize) {
+            return nullptr; 
+        }
+
+        size_t numPages = (size + frameSize - 1) / frameSize; // calculate number of pages needed
+        long long allocationId = nextAllocationId++;
+
+        // Create an allocation record for the process
+        AllocationRecord record;
+        record.allocationId = allocationId;
+        record.process = process;
+        record.numPages = numPages;
+        record.pageTable.assign(numPages, PTE{}); // all pages start as "not in memory" (invalid)
+
+        allocations[allocationId] = record;
+
+        void* handle = new char[1];
+        pointerToAllocationId[handle] = allocationId;
+        return handle;
     }
-
-    size_t numPages = (size + frameSize - 1) / frameSize; // calculate number of pages needed
-    long long allocationId = nextAllocationId++;
-
-    // Create an allocation record for the process
-    AllocationRecord record;
-    record.allocationId = allocationId;
-    record.process = process;
-    record.numPages = numPages;
-    record.pageTable.assign(numPages, PTE{}); // all pages start as "not in memory" (invalid)
-
-    allocations[allocationId] = record;
-
-    void* handle = new char[1];
-    pointerToAllocationId[handle] = allocationId;
-    return handle;
 }
 
 // Called whenever a process's instruction touches a specific virtual page.
 // This is where the actual page fault handling happens.
 void DemandPagingAllocator::accessPage(void* ptr, size_t pageNum) {
-    auto it = pointerToAllocationId.find(ptr);
-    if (it == pointerToAllocationId.end()) {
-        throw std::invalid_argument("Invalid process handle.");
+    {
+        std::lock_guard<std::mutex> lock(allocatorMutex);
+
+        auto it = pointerToAllocationId.find(ptr);
+        if (it == pointerToAllocationId.end()) {
+            throw std::invalid_argument("Invalid process handle.");
+        }
+
+        long long allocationId = it->second;
+        auto& record = allocations.at(allocationId);
+
+        if (pageNum >= record.pageTable.size()) {
+            throw std::out_of_range("Access violation: page index out of process's allocated range.");
+        }
+
+        PTE& pte = record.pageTable[pageNum];
+        if (pte.valid) {
+            return; // page is already in memory
+        }
+
+        // Page Fault
+        size_t frameIndex;
+        if (!freeFrameList.empty()) {
+            // There's a free frame
+            frameIndex = freeFrameList.front();
+            freeFrameList.pop_front();
+        } else {
+            // Free frame list is empty - evict a page to backing store
+            frameIndex = evictOnePage();
+        }
+
+        // Load the page into the frame
+        loadPageIntoFrame(allocationId, pageNum, frameIndex);
     }
-
-    long long allocationId = it->second;
-    auto& record = allocations.at(allocationId);
-
-    if (pageNum >= record.pageTable.size()) {
-        throw std::out_of_range("Access violation: page index out of process's allocated range.");
-    }
-
-    PTE& pte = record.pageTable[pageNum];
-    if (pte.valid) {
-        return; // page is already in memory
-    }
-
-    // Page Fault
-    size_t frameIndex;
-    if (!freeFrameList.empty()) {
-        // There's a free frame
-        frameIndex = freeFrameList.front();
-        freeFrameList.pop_front();
-    } else {
-        // Free frame list is empty - evict a page to backing store
-        frameIndex = evictOnePage();
-    }
-
-    // Load the page into the frame
-    loadPageIntoFrame(allocationId, pageNum, frameIndex);
 }
 
 // Pick the oldest page and transfer it to the backing store
+// No need for mutex here, since this process happens independent from other shared states
 size_t DemandPagingAllocator::evictOnePage() {
     size_t victimFrame = fifoQueue.front(); 
     fifoQueue.pop_front();
@@ -114,6 +123,7 @@ size_t DemandPagingAllocator::evictOnePage() {
 }
 
 // Actually moves a page into physical memory and updates all bookkeeping.
+// No need for mutex here, since this process happens independent from other shared states
 void DemandPagingAllocator::loadPageIntoFrame(long long allocationId, size_t pageNum, size_t frameIndex) {
     auto& record = allocations.at(allocationId);
 
@@ -132,6 +142,7 @@ void DemandPagingAllocator::loadPageIntoFrame(long long allocationId, size_t pag
 }
 
 // Writes page metadata as a text block into the shared backing store file.
+// No need for mutex here, since this process happens independent from other shared states
 void DemandPagingAllocator::writePageToBackingStore(const AllocationRecord& record, size_t pageNum) {
     std::ofstream file(backingStoreFile, std::ios::app); // append, don't overwrite existing entries
     if (!file.is_open()) {
@@ -148,6 +159,7 @@ void DemandPagingAllocator::writePageToBackingStore(const AllocationRecord& reco
 }
 
 // Removes one specific process/page's entry from the backing store file.
+// No need for mutex here, since this process happens independent from other shared states
 void DemandPagingAllocator::removePageFromBackingStore(long long allocationId, size_t pageNum) {
     auto& record = allocations.at(allocationId);
 
@@ -196,75 +208,95 @@ void DemandPagingAllocator::removePageFromBackingStore(long long allocationId, s
 // Frees all of a process's memory, both resident frames and any pages
 // still sitting in the backing store.
 void DemandPagingAllocator::deallocate(void* ptr) {
-    auto it = pointerToAllocationId.find(ptr);
-    if (it == pointerToAllocationId.end()) {
-        throw std::invalid_argument("Pointer does not correspond to an active allocation.");
-    }
+    {
+        std::lock_guard<std::mutex> lock(allocatorMutex);
 
-    long long allocationId = it->second;
-    auto& record = allocations.at(allocationId);
-
-    for (size_t p = 0; p < record.pageTable.size(); ++p) {
-        PTE& pte = record.pageTable[p];
-        if (pte.valid) {
-            // Page was in memory -- free its frame.
-            frameOwner[pte.frameNumber] = -1;
-            freeFrameList.push_back(pte.frameNumber);
-            allocatedSize -= frameSize;
-
-            // Remove it from the FIFO queue too, so eviction doesn't
-            // later try to reference a frame that's already been freed.
-            auto fifoIt = std::find(fifoQueue.begin(), fifoQueue.end(), pte.frameNumber);
-            if (fifoIt != fifoQueue.end()) fifoQueue.erase(fifoIt);
-        } else {
-            // Page was swapped out -- clean up its backing store entry too.
-            removePageFromBackingStore(allocationId, p);
+        auto it = pointerToAllocationId.find(ptr);
+        if (it == pointerToAllocationId.end()) {
+            throw std::invalid_argument("Pointer does not correspond to an active allocation.");
         }
-    }
 
-    allocations.erase(allocationId);
-    delete[] static_cast<char*>(ptr); // free synthetic handle allocated earlier
-    pointerToAllocationId.erase(it);
+        long long allocationId = it->second;
+        auto& record = allocations.at(allocationId);
+
+        for (size_t p = 0; p < record.pageTable.size(); ++p) {
+            PTE& pte = record.pageTable[p];
+            if (pte.valid) {
+                // Page was in memory -- free its frame.
+                frameOwner[pte.frameNumber] = -1;
+                freeFrameList.push_back(pte.frameNumber);
+                allocatedSize -= frameSize;
+
+                // Remove it from the FIFO queue too, so eviction doesn't
+                // later try to reference a frame that's already been freed.
+                auto fifoIt = std::find(fifoQueue.begin(), fifoQueue.end(), pte.frameNumber);
+                if (fifoIt != fifoQueue.end()) fifoQueue.erase(fifoIt);
+            } else {
+                // Page was swapped out -- clean up its backing store entry too.
+                removePageFromBackingStore(allocationId, p);
+            }
+        }
+
+        allocations.erase(allocationId);
+        delete[] static_cast<char*>(ptr); // free synthetic handle allocated earlier
+        pointerToAllocationId.erase(it);
+    }
 }
 
 // Debug/visualization helper -- prints overall usage and what's in each frame.
 std::string DemandPagingAllocator::visualizeMemory() {
-    std::ostringstream oss;
-    oss << "\n\n--------------------------------------------------\n";
-    oss << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
-    oss << "--------------------------------------------------\n";
+    {
+        std::lock_guard<std::mutex> lock(allocatorMutex);
 
-    size_t currentAllocatedSize = this->getAllocatedSize();
-    size_t capacitySize = this->getCapacity();
-    long memory_util = std::round((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
+        std::ostringstream oss;
+        oss << "\n\n--------------------------------------------------\n";
+        oss << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
+        oss << "--------------------------------------------------\n";
 
-    oss << "CPU-Util: " << ""/*  */ << "\%\n";
-    oss << "Memory Usage: " << currentAllocatedSize << "MiB " << "/ " << capacitySize << "MiB\n"; // allocated / total memory
-    oss << "Memory Util: " << memory_util << "\%\n\n";
+        size_t currentAllocatedSize = this->getAllocatedSize();
+        size_t capacitySize = this->getCapacity();
+        long memory_util = std::round((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
 
-    oss << "==================================================\n";
-    oss << "Running processes and memory usage:\n";
-    oss << "--------------------------------------------------\n";
+        oss << "CPU-Util: " << ""/*  */ << "\%\n";
+        oss << "Memory Usage: " << currentAllocatedSize << "MiB " << "/ " << capacitySize << "MiB\n"; // allocated / total memory
+        oss << "Memory Util: " << memory_util << "\%\n\n";
 
-    // loop through each process
+        oss << "==================================================\n";
+        oss << "Running processes and memory usage:\n";
+        oss << "--------------------------------------------------\n";
 
-    oss << "--------------------------------------------------\n";
+        // loop through each process (allocations)
+        for (const auto& [allocationId, record] : allocations) {
+            size_t residentPages = 0;
+            for (const auto& pte : record.pageTable) {
+                if (pte.valid)
+                    residentPages++;
+            }
 
+            size_t residentBytes = residentPages * frameSize;
+            // size_t virtualBytes = record.process->getMemoryRequirement();
 
-    /* oss << "Demand Paging Allocator [" << allocatedSize << "/" << maximumSize
-        << " bytes used, " << numFrames << " frames of " << frameSize << " bytes each]\n";
-    oss << "Pages in: " << numPagedIn << ", Pages out: " << numPagedOut << "\n";
-
-    for (size_t i = 0; i < numFrames; ++i) {
-        oss << "Frame " << i << ": ";
-        if (frameOwner[i] == -1) {
-            oss << "free";
-        } else {
-            oss << "allocation #" << frameOwner[i] << " page " << framePage[i];
+            oss << record.process->getName() << " " << residentBytes << "MiB\n";
         }
-        oss << "\n";
-    } */
-    return oss.str();
+
+        oss << "--------------------------------------------------\n";
+
+
+        /* oss << "Demand Paging Allocator [" << allocatedSize << "/" << maximumSize
+            << " bytes used, " << numFrames << " frames of " << frameSize << " bytes each]\n";
+        oss << "Pages in: " << numPagedIn << ", Pages out: " << numPagedOut << "\n";
+
+        for (size_t i = 0; i < numFrames; ++i) {
+            oss << "Frame " << i << ": ";
+            if (frameOwner[i] == -1) {
+                oss << "free";
+            } else {
+                oss << "allocation #" << frameOwner[i] << " page " << framePage[i];
+            }
+            oss << "\n";
+        } */
+        return oss.str();
+    }
 }
 
 
