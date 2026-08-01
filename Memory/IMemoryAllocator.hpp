@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <deque>
-#include "../process/Process.hpp"
+#include "../Process/Process.hpp"
 
 // Thrown when a process tries to access memory that it does not have permission to access.
 class MemoryAccessViolationException : public std::runtime_error {
@@ -22,7 +22,7 @@ class IMemoryAllocator {
         virtual ~IMemoryAllocator() = default;
         virtual void* allocate(std::shared_ptr<Process> process) = 0;
         virtual void deallocate(void* ptr) = 0;
-        virtual std::string visualizeMemory() = 0;
+        virtual std::string visualizeMemory(std::string command) = 0;
         virtual size_t getCapacity() const = 0;
         virtual size_t getAllocatedSize() const = 0;
         virtual size_t getFreeSize() const = 0;

@@ -68,7 +68,10 @@ public:
     void* allocate(std::shared_ptr<Process> Process) override;
 
     void deallocate(void* ptr) override;
-    std::string visualizeMemory() override;
+    std::string visualizeMemory(std::string command) override;
+
+    std::string visualizeHighLevelMemory();
+    std::string visualizeDetailedMemory();
 
     size_t getCapacity() const override;      
     size_t getAllocatedSize() const override; 

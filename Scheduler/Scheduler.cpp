@@ -238,9 +238,11 @@ void Scheduler::reportUtil() {
 }
 
 // For debugging
-void Scheduler::visualizeMemory() {
+void Scheduler::visualizeMemory(std::string command) {
     if (memoryAllocator) {
-        std::string memVisual = memoryAllocator->visualizeMemory();
+        std::string memVisual;
+        memVisual = memoryAllocator->visualizeMemory(command);
+
         std::cout << memVisual << std::endl;
     } else {
         std::cout << "No memory allocator initialized.\n";

@@ -244,7 +244,15 @@ void DemandPagingAllocator::deallocate(void* ptr) {
 }
 
 // Debug/visualization helper -- prints overall usage and what's in each frame.
-std::string DemandPagingAllocator::visualizeMemory() {
+std::string DemandPagingAllocator::visualizeMemory(std::string command) {
+    if (command == "process-smi") {
+        return visualizeHighLevelMemory();
+    } else if (command == "vmstat") {
+        return visualizeDetailedMemory();
+    }
+}
+
+std::string DemandPagingAllocator::visualizeHighLevelMemory() {
     {
         std::lock_guard<std::mutex> lock(allocatorMutex);
 
@@ -299,6 +307,29 @@ std::string DemandPagingAllocator::visualizeMemory() {
     }
 }
 
+std::string DemandPagingAllocator::visualizeDetailedMemory() {
+    {
+        std::lock_guard<std::mutex> lock(allocatorMutex);
+
+        std::ostringstream oss;
+
+        size_t currentAllocatedSize = this->getAllocatedSize();
+        size_t capacitySize = this->getCapacity();
+        long memory_util = std::round((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
+
+        oss << std::endl;
+        oss << capacitySize << "\t"/*  */ << "total memory\n";
+        oss << currentAllocatedSize << "\t"/*  */ << "used memory\n";
+        oss << capacitySize - currentAllocatedSize << "\t"/*  */ << "free memory\n";
+        oss << "" << "\t"/*  */ << "idle cpu ticks\n";
+        oss << "" << "\t"/*  */ << "active cpu ticks\n";
+        oss << "" << "\t"/*  */ << "total cpu ticks\n";
+        oss << this->numPagedIn << "\t"/*  */ << "num paged in\n";
+        oss << this->numPagedOut << "\t"/*  */ << "num paged out\n";
+
+        return oss.str();
+    }
+}
 
 size_t DemandPagingAllocator::getCapacity() const {
     return maximumSize; 
