@@ -59,6 +59,7 @@ void ProcessConsole::printProcessInfo() {
     if (activeProcess && activeProcess->isFinished()) {
         std::cout << "\nFinished!\n";
     }
+
 }
 
 void ProcessConsole::setProcess(std::shared_ptr<Process> process) {

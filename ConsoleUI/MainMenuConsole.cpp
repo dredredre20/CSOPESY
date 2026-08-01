@@ -297,10 +297,21 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
     std::string processName = input.substr(10);
     processName.erase(std::remove(processName.begin(), processName.end(), '\''), processName.end());
 
-    // Check if the process exists (either running or in ready queue)
+    // Check if the process exists
     std::shared_ptr<Process> process = scheduler->findProcessByName(processName);
 
-    // If it exists
+    // Check if process is already terminated due to memory access violation
+    if (process != nullptr && process->getState() == Process::TERMINATED_VIOLATION) {
+        std::cout << "\nProcess " << process->getName()
+            << " shut down due to memory access violation error that occurred at "
+            << process->getViolationTimestamp() << ". 0x"
+            << std::hex << process->getViolationAddress() << " invalid."
+            << std::dec << std::endl;
+
+        return; // do not switch consoles anymore
+    }
+
+    // If process has not been terminated yet due to memory access violation
     if (process != nullptr){
         auto manager = ConsoleManager::getInstance();
         // Attach the process to the process console
@@ -311,11 +322,10 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
     }
 
     // Otherwise
-    else {        
+    else {
         std::cerr << "Error: Process '" << processName << "' not found.\n";
     }
 }
-
 
 // Logic for handling the scheduler -start command
 void MainMenuConsole::handleSchedulerStartCommand() {
