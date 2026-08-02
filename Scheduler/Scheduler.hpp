@@ -13,7 +13,7 @@ public:
 	virtual ~Scheduler() = default;
 
 	void initialize(const Config& config);
-	void addProcess(std::shared_ptr<Process> process);
+	void addProcess(std::shared_ptr<Process> process, std::optional<size_t> memSize);
 	void start();
 	void stop();
 

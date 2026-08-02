@@ -37,14 +37,26 @@ void Scheduler::initialize(const Config& cfg) {
     }
 }
 
-void Scheduler::addProcess(std::shared_ptr<Process> process) {
+void Scheduler::addProcess(std::shared_ptr<Process> process, std::optional<size_t> memSize) { // specify the memsize properly
     lock_guard<mutex> lock(queueMutex);
     if (process) {
-        size_t memSize = randomPowerofTwoMemSize();
-        process->setMemoryRequirement(memSize);
+        std::cout << "HERE1" << std::endl;
+
+        size_t buffer = memSize.has_value() ? *memSize : randomPowerofTwoMemSize();
+
+        std::cout << buffer << std::endl;
+
+        process->setMemoryRequirement(buffer);
+
+        std::cout << "HERE3" << std::endl;
     }
     processQueues[nextCore].push_back(process);
+
+    std::cout << "HERE4" << std::endl;
+
     nextCore = (nextCore + 1) % config.numCPU;
+
+    std::cout << "HERE5" << std::endl;
 }
 
 void Scheduler::start() {
