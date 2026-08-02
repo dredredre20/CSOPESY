@@ -5,6 +5,7 @@
 #include <limits>
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 
 DemandPagingAllocator::DemandPagingAllocator(size_t maximumSize, size_t frameSize)
     : frameSize(frameSize),
@@ -254,11 +255,11 @@ std::string DemandPagingAllocator::visualizeHighLevelMemory() {
 
         size_t currentAllocatedSize = this->getAllocatedSize();
         size_t capacitySize = this->getCapacity();
-        long memory_util = std::round((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
+        long memory_util = std::lround((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
 
-        oss << "CPU-Util: " << ""/*  */ << "\%\n";
+        oss << "CPU-Util: " << ""/*  */ << "%\n";
         oss << "Memory Usage: " << currentAllocatedSize << "MiB " << "/ " << capacitySize << "MiB\n"; // allocated / total memory
-        oss << "Memory Util: " << memory_util << "\%\n\n";
+        oss << "Memory Util: " << memory_util << "%\n\n";
 
         oss << "==================================================\n";
         oss << "Running processes and memory usage:\n";
@@ -306,7 +307,7 @@ std::string DemandPagingAllocator::visualizeDetailedMemory(size_t activeTicks, s
 
         size_t currentAllocatedSize = this->getAllocatedSize();
         size_t capacitySize = this->getCapacity();
-        long memory_util = std::round((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
+        long memory_util = std::lround((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
 
         oss << std::endl;
         oss << capacitySize << "\t"/*  */ << "total memory\n";

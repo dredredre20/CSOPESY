@@ -89,14 +89,14 @@ void Process::generateInstructions(int numInstructions) {
         case 7:
 			// READ command - reads from shared memory address into variable "x_mem"
             commandList.push_back(std::make_shared<ReadCommand>(
-                ("x_mem"), sharedAddress
+                std::string("x"), sharedAddress
             ));
 
             break;
 
         case 8:
 			// WRITE command - writes the value of x to shared memory address
-            commandList.push_back(std::make_shared<ReadCommand>(
+            commandList.push_back(std::make_shared<WriteCommand>(
                 sharedAddress, std::string("x") 
             ));
      

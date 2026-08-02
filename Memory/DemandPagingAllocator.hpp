@@ -5,6 +5,7 @@
 #include <deque>
 #include <string>
 #include <cstddef>
+#include <mutex>
 
 
 class DemandPagingAllocator : public IMemoryAllocator {
