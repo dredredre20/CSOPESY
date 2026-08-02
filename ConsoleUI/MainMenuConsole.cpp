@@ -69,6 +69,10 @@ void MainMenuConsole::process(){
         this -> handleScreenRCommand(command);
     }
 
+	else if (command.rfind("screen -c ", 0) == 0) {
+		this->handleScreenCCommand(command);
+	}
+
     else if (command == "scheduler-start"){
         this -> handleSchedulerStartCommand();
     }
@@ -325,6 +329,35 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
     else {
         std::cerr << "Error: Process '" << processName << "' not found.\n";
     }
+}
+
+void MainMenuConsole::handleScreenCCommand(const std::string& input) {
+    std::string args = input.substr(10);
+    args.erase(std::remove(args.begin(), args.end(), '\''), args.end());
+
+    std::istringstream iss(args);
+    std::string processName;
+    std::string memorySizeStr;
+    std::string instructions;
+
+	if (!(iss >> processName >> memorySizeStr)) {
+		std::cout << "Error: Usage is 'screen -c <process_name> <process_memory_size> <instructions>'.\n";
+		return;
+	}
+
+    size_t memorySize = 0;
+
+    try {
+        memorySize = std::stoul(memorySizeStr);
+    }
+    catch (...) {
+        std::cout << "Error: Invalid memory allocation.\n";
+        return;
+    }
+
+    std::getline(iss, instructions);
+    std::shared_ptr<Process> process = scheduler->findProcessByName(processName);
+    process->parseInstructions(instructions);
 }
 
 // Logic for handling the scheduler -start command

@@ -1,12 +1,23 @@
 #include "SymbolTable.hpp"
 #include <string>
+#include <stdexcept>
 
-void SymbolTable::setVar(const std::string& varName, uint16_t value) {
-    table[varName] = value;
+void SymbolTable::declareVar(const std::string& varName) {
+    if (table.count(varName))
+        return; // variable already declared
+
+    if (table.size() >= MAX_VARS)
+		throw std::runtime_error("Symbol table is full. Cannot declare more variables.");
+
+    uintptr_t offset = static_cast<uintptr_t>(table.size() * BYTES_PER_VAR);
+    table[varName] = offset;
 }
 
-uint16_t SymbolTable::getVar(const std::string& varName) const {
-    return table.at(varName);
+uintptr_t SymbolTable::getAddress(const std::string& varName) const {
+    auto it = table.find(varName);
+    if (it == table.end())
+        throw std::runtime_error("Variable not found.");
+    return it->second;
 }
 
 bool SymbolTable::hasVar(const std::string& varName) const {

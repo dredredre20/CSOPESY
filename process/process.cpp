@@ -24,15 +24,18 @@ Process::Process(int p_id, std::string name) {
 }
 
 void Process::generateInstructions(int numInstructions) {
-    symbolTable.setVar("x", 0);
-    symbolTable.setVar("y", 0);
-    symbolTable.setVar("z", 0);
+    symbolTable.declareVar("x");
+    symbolTable.declareVar("y");
+    symbolTable.declareVar("z");
+
+	uintptr_t addrX = symbolTable.getAddress("x");
+    uintptr_t addrY = symbolTable.getAddress("y");
+    uintptr_t addrZ = symbolTable.getAddress("z");
 
     static const std::vector<std::string> vars = { "x", "y", "z" };
-    static const uintptr_t sharedAddress = 0x10; // adjust if needed
 
     for (int i = 0; i < numInstructions; ++i) {
-        int roll = i % 9; // cycles through 7 slots
+        int roll = i % 9; // cycles through 9 slots
 
         switch (roll) {
         case 0:
@@ -87,9 +90,9 @@ void Process::generateInstructions(int numInstructions) {
             break;
 
         case 7:
-			// READ command - reads from shared memory address into variable "x_mem"
+			// READ command - reads from shared memory address into variable "x"
             commandList.push_back(std::make_shared<ReadCommand>(
-                std::string("x"), sharedAddress
+                std::string("x"), addrX
             ));
 
             break;
@@ -97,10 +100,65 @@ void Process::generateInstructions(int numInstructions) {
         case 8:
 			// WRITE command - writes the value of x to shared memory address
             commandList.push_back(std::make_shared<WriteCommand>(
-                sharedAddress, std::string("x") 
+                addrX, std::string("x") 
             ));
      
             break;
+        }
+    }
+}
+
+// Add instructions to commandList
+void Process::loadInstructions(const std::vector<std::shared_ptr<ICommand>>& instructions) {
+    commandList.insert(commandList.end(), instructions.begin(), instructions.end());
+}
+
+// Helper function to parse instructions from a string
+void Process::parseInstructions(const std::string& instructions) {
+    std::istringstream stream(instructions);
+    std::string token;
+
+    while (std::getline(stream, token, ';')) {
+		std::istringstream lineStream(token);
+		std::string commandType;
+		lineStream >> commandType;
+		if (commandType == "DECLARE") {
+			std::string varName;
+			uint16_t value;
+			lineStream >> varName >> value;
+			commandList.push_back(std::make_shared<DeclareCommand>(varName, value));
+		}
+		else if (commandType == "PRINT") {
+			std::string message;
+			std::getline(lineStream, message);
+			commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, message));
+		}
+		else if (commandType == "ADD") {
+			std::string resultVar, operandA, operandB;
+			lineStream >> resultVar >> operandA >> operandB;
+			commandList.push_back(std::make_shared<AddCommand>(resultVar, operandA, operandB));
+		}
+		else if (commandType == "SUBTRACT") {
+			std::string resultVar, operandA, operandB;
+			lineStream >> resultVar >> operandA >> operandB;
+			commandList.push_back(std::make_shared<SubtractCommand>(resultVar, operandA, operandB));
+		}
+		else if (commandType == "SLEEP") {
+			uint8_t ticks;
+			lineStream >> ticks;
+			commandList.push_back(std::make_shared<SleepCommand>(ticks));
+		}
+        else if (commandType == "READ") {
+			std::string varName;
+			uintptr_t address;
+            lineStream >> varName >> address;
+            commandList.push_back(std::make_shared<ReadCommand>(varName, address));
+        }
+        else if (commandType == "WRITE") {
+            std::string varName;
+            uintptr_t address;
+            lineStream >> address >> varName;
+            commandList.push_back(std::make_shared<WriteCommand>(address, varName));
         }
     }
 }
@@ -128,11 +186,13 @@ void Process::moveToNextLine() {
 }
 
 void Process::setVariable(const std::string& varName, uint16_t value) {
-    symbolTable.setVar(varName, value);
+	uintptr_t addr = symbolTable.getAddress(varName);
+    memoryAllocator->writeMemory(allocatedMemoryBlock, addr, value);
 }
 
 uint16_t Process::getVariable(const std::string& varName) const {
-    return symbolTable.getVar(varName);
+	uintptr_t addr = symbolTable.getAddress(varName);
+	return memoryAllocator->readMemory(allocatedMemoryBlock, addr);
 }
 
 bool Process::hasVariable(const std::string& varName) const {

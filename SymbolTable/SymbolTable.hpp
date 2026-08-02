@@ -3,11 +3,19 @@
 #include <string>
 
 class SymbolTable {
+    static constexpr int MAX_SIZE_BYTES = 64;
+    static constexpr int BYTES_PER_VAR = 2;
+	static constexpr int MAX_VARS = MAX_SIZE_BYTES / BYTES_PER_VAR;
+
     public:
-        void setVar(const std::string& varName, uint16_t value);
-        uint16_t getVar(const std::string& varName) const;
+        void declareVar(const std::string& varName);
+        uintptr_t getAddress(const std::string& varName) const;
         bool hasVar(const std::string& varName) const;
 
+        int getUsedBytes() const { return static_cast<int>(table.size()) * BYTES_PER_VAR; }
+		int getFreeBytes() const { return static_cast<int>(MAX_SIZE_BYTES) - getUsedBytes(); }
+		int getUsedVars() const { return static_cast<int>(table.size()); }
+
     private:
-        std::unordered_map<std::string, uint16_t> table;
+		std::unordered_map<std::string, uintptr_t> table; // now stores the offset value of the variable in memory
 };

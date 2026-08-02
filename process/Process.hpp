@@ -7,6 +7,7 @@
 #include "../Commands/ICommand.hpp"
 #include "../Commands/AddCommand.hpp"
 #include "../SymbolTable/SymbolTable.hpp"
+#include "../Memory/DemandPagingAllocator.hpp"
 
 class IMemoryAllocator; // Forward declaration
 
@@ -24,6 +25,8 @@ public:
     Process(int p_id, std::string name);
 
     void generateInstructions(int numInstructions);
+    void loadInstructions(const std::vector<std::shared_ptr<ICommand>>& instructions);
+    void parseInstructions(const std::string& instructions);
 
     // Executes the command currently pointed to by commandCounter on the given core.
     void executeCurrentCommand(int coreId);

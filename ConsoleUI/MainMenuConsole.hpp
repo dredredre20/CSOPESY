@@ -2,6 +2,7 @@
 #include "AConsole.hpp"
 #include "../Config.hpp"
 #include "../Scheduler/Scheduler.hpp"
+#include "../process/Process.hpp"
 #include <string>
 
 class MainMenuConsole : public AConsole{
@@ -11,6 +12,7 @@ class MainMenuConsole : public AConsole{
         void handleExitCommand();
         void handleScreenSCommand(const std::string &input); 
         void handleScreenRCommand(const std::string &input);
+        void handleScreenCCommand(const std::string &input);
         void handleSchedulerStartCommand();
         void handleSchedulerStopCommand();
         void handleReportUtilCommand();
