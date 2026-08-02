@@ -40,23 +40,13 @@ void Scheduler::initialize(const Config& cfg) {
 void Scheduler::addProcess(std::shared_ptr<Process> process, std::optional<size_t> memSize) { // specify the memsize properly
     lock_guard<mutex> lock(queueMutex);
     if (process) {
-        std::cout << "HERE1" << std::endl;
-
         size_t buffer = memSize.has_value() ? *memSize : randomPowerofTwoMemSize();
 
-        std::cout << buffer << std::endl;
-
         process->setMemoryRequirement(buffer);
-
-        std::cout << "HERE3" << std::endl;
     }
     processQueues[nextCore].push_back(process);
 
-    std::cout << "HERE4" << std::endl;
-
     nextCore = (nextCore + 1) % config.numCPU;
-
-    std::cout << "HERE5" << std::endl;
 }
 
 void Scheduler::start() {
@@ -108,6 +98,7 @@ bool Scheduler::tryAdmitProcess(const std::shared_ptr<Process>& process) {
     }
 
     process->setMemoryAllocatedBlock(block);
+    process->setMemoryAllocator(memoryAllocator.get());
     memoryResidentProcesses.push_back(process);
     return true;
 }
