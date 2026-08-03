@@ -47,6 +47,13 @@ void ProcessConsole::printProcessInfo() {
 
         std::cout << "\nProcess Name: " << activeProcess->getName() << std::endl;
         std::cout << "ID: " << activeProcess->getPID() << std::endl;
+
+        int core = activeProcess->getCPUCoreID();
+        if (core == -1)
+            std::cout << "Status: Queued (waiting for core assignment)\n";
+        else
+            std::cout << "Status: Running on Core " << core << "\n";
+        
         std::cout << "\nCurrent Instruction line: " << activeProcess->getCommandCounter() << std::endl;
         std::cout << "Lines of code: " << activeProcess->getLinesOfCode() << "\n\n";
 

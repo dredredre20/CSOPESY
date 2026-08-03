@@ -19,12 +19,14 @@ void FCFSScheduler::runCycle(int coreId) {
             {
                 currentProcess = processQueues[coreId].front();
                 processQueues[coreId].erase(processQueues[coreId].begin());
-
-                if (!MemoryManager::getInstance()->tryAdmitProcess(currentProcess)) {
-                    processQueues[coreId].push_back(currentProcess);
-                    currentProcess.reset();
-                }
             }
+        }
+
+        // Admit outside lock to avoid deadlock
+        if (currentProcess && !MemoryManager::getInstance()->tryAdmitProcess(currentProcess)) {
+            lock_guard<mutex> lock(queueMutex);
+            processQueues[coreId].push_back(currentProcess);
+            currentProcess.reset();
         }
 
         if (currentProcess) {
@@ -46,14 +48,14 @@ void FCFSScheduler::runCycle(int coreId) {
                         currentProcess->wake();
                         currentProcess->moveToNextLine();
                     }
-                    idleCPUTicks++;
+                    this->idleCPUTicks++;
                     this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
                     continue;
                 }
 
                 currentProcess->executeCurrentCommand(coreId);
                 currentProcess->moveToNextLine();
-                activeCPUTicks++;
+                this->activeCPUTicks++;
                 this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
@@ -64,7 +66,7 @@ void FCFSScheduler::runCycle(int coreId) {
                 finishedProcesses.push_back(currentProcess);
             }
         } else {
-            idleCPUTicks++;
+            this->idleCPUTicks++;
             this_thread::sleep_for(chrono::milliseconds(50));
         }
     }

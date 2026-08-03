@@ -224,9 +224,7 @@ void Process::executeCurrentCommand(int coreId) {
             << " attempted to execute past its command list bounds.\n";
         return;
     }
-    if (!sleeping) {
-        commandList[commandCounter]->execute(coreId, *this);
-    }
+    commandList[commandCounter]->execute(coreId, *this);
 }
 
 // Move instruction pointer to the next command line

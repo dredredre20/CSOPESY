@@ -299,12 +299,6 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
     auto newProcess = std::make_shared<Process>(nextProcessId++, processName, memorySize);
     auto memManager = MemoryManager::getInstance();
 
-    // Validate if here is memory available
-	if (memorySize > memManager->getFreeSize()) {
-		std::cout << "Error: Not enough memory available for process '" << processName << "'.\n";
-		return;
-	}
-
 	newProcess->setMemoryAllocator(memManager->getAllocator());
     
     // Populate with dummy commands
@@ -312,17 +306,11 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
 
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);
-    
-    // Wait until scheduler assigns a core
-    while (newProcess->getCPUCoreID() == -1) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
 
     auto manager = ConsoleManager::getInstance();
 
     // Attach the process to the process console
     manager->attachProcess(newProcess);
-
     manager->switchConsole(PROCESS_CONSOLE);
 
 }
