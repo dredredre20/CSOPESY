@@ -1,12 +1,12 @@
 #pragma once
 #include "IMemoryAllocator.hpp"
+#include "../process/Process.hpp"
 #include <vector>
 #include <unordered_map>
 #include <deque>
 #include <string>
 #include <cstddef>
 #include <mutex>
-
 
 class DemandPagingAllocator : public IMemoryAllocator {
 private:

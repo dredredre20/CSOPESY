@@ -3,9 +3,13 @@
 #include "ProcessConsole.hpp"
 #include "../Scheduler/FCFSScheduler.hpp"
 #include "../Scheduler/RRScheduler.hpp"
+#include "../Memory/MemoryUtils.hpp"
+#include "../Memory/MemoryManager.hpp"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <random>
+#include <cmath>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -105,18 +109,34 @@ void MainMenuConsole::process(){
 
 static bool runningProcesses = true; // flag for generating the dummy processes
 static void generateProcesses(Scheduler& scheduler, int numProcesses, const Config& cfg) {
-    // further checking neededc
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distIns(cfg.minIns, cfg.maxIns);
+
+    auto validMemSizes = getPowersOfTwo(cfg.minMemPerProc, cfg.maxMemPerProc);
+	std::uniform_int_distribution<> distMem(0, static_cast<int>(validMemSizes.size())  - 1);
 
     for (int i = 1; i <= numProcesses; ++i) {
 
         if (!runningProcesses) break;
 
         std::string name = "process" + std::string(i < 10 ? "0" : "") + std::to_string(i);
-        std::shared_ptr<Process> p = std::make_shared<Process>(i, name);
+        
+		int memSize = validMemSizes[distMem(gen)];
+		auto memManager = MemoryManager::getInstance();
 
-        int numInstructions = cfg.minIns + (rand() % (cfg.maxIns - cfg.minIns + 1));
+        std::shared_ptr<Process> p = std::make_shared<Process>(i, name, memSize);
+		p->setMemoryAllocator(memManager->getAllocator());
+        p->generateInstructions(distIns(gen));
+        
+        void* block = memManager->allocate(p);
+        if (!block) {
+            std::cout << "Error: Allocation failed for '" << name << "'.\n";
+            return;
+        }
+        p->setMemoryAllocatedBlock(block);
 
-        p->generateInstructions(numInstructions);
         scheduler.addProcess(p);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(cfg.batchFreq * 100));
@@ -189,7 +209,15 @@ void MainMenuConsole::handleInitializeCommand() {
     }
     file.close();
 
-    // 3. Scheduler Setup
+	config.validateMemory(); // Validate memory constraints
+
+    // 3. Initialize Memory Manager
+    MemoryManager::getInstance()->initialize(
+        static_cast<size_t>(config.maxOverallMem),
+        static_cast<size_t>(config.memPerFrame)
+    );
+
+    // 4. Scheduler Setup
     if (config.scheduler == "fcfs") {
         this->scheduler = std::make_unique<FCFSScheduler>();
     }
@@ -254,6 +282,10 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
     }
 
     // Validate memory size (should be a power of 2, in rage [2^6, 2^16])
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distIns(config.minIns, config.maxIns);
+
     size_t memorySize = 0;
 
     try {
@@ -263,21 +295,30 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
         return;
     }
 
-    bool isPowerOfTwo = (memorySize > 0) && ((memorySize & (memorySize - 1)) == 0);
-    bool inRange = (memorySize >= 64 && memorySize <= 65536); // 2^6 to 2^16
-
-    if (!isPowerOfTwo || !inRange) {
-        std::cout << "invalid memory allocation\n";
-        return;
-    }
+	config.validateProcessMemSize(static_cast<int>(memorySize));
 
     // Create the process and assign memory 
     static int nextProcessId = 1;
-    auto newProcess = std::make_shared<Process>(nextProcessId++, processName);
-    int numInstructions = config.minIns + (rand() % (config.maxIns - config.minIns + 1));
+    auto newProcess = std::make_shared<Process>(nextProcessId++, processName, memorySize);
+    auto memManager = MemoryManager::getInstance();
 
+    // Validate if here is memory available
+	if (memorySize > memManager->getFreeSize()) {
+		std::cout << "Error: Not enough memory available for process '" << processName << "'.\n";
+		return;
+	}
+
+	newProcess->setMemoryAllocator(memManager->getAllocator());
+    
     // Populate with dummy commands
-    newProcess->generateInstructions(numInstructions);
+    newProcess->generateInstructions(distIns(gen));
+
+    void* block = memManager->allocate(newProcess);
+    if (!block) {
+        std::cout << "Error: Allocation failed for '" << processName << "'.\n";
+        return;
+    }
+	newProcess->setMemoryAllocatedBlock(block);
 
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);

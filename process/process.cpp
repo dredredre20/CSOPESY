@@ -9,15 +9,17 @@
 #include "../Commands/ReadCommand.hpp"
 #include "../Commands/WriteCommand.hpp"
 #include "../ConsoleUI/ProcessConsole.hpp"
+#include "../Memory/IMemoryAllocator.hpp"
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
 
 // Constructor
-Process::Process(int p_id, std::string name) {
+Process::Process(int p_id, std::string name, size_t memRequired) {
     this->p_id = p_id;
     this->name = name;
+    this->memoryRequirement = memRequired;
     this->commandCounter = 0;
     this->currentState = ProcessState::READY;
     this->sleeping = false;
@@ -186,13 +188,25 @@ void Process::moveToNextLine() {
 }
 
 void Process::setVariable(const std::string& varName, uint16_t value) {
-	uintptr_t addr = symbolTable.getAddress(varName);
-    memoryAllocator->writeMemory(allocatedMemoryBlock, addr, value);
+    if (!symbolTable.hasVar(varName))
+        symbolTable.declareVar(varName);
+
+    uintptr_t addr = symbolTable.getAddress(varName);
+
+    if (memoryAllocator && allocatedMemoryBlock)
+        memoryAllocator->writeMemory(allocatedMemoryBlock, addr, value);
 }
 
 uint16_t Process::getVariable(const std::string& varName) const {
-	uintptr_t addr = symbolTable.getAddress(varName);
-	return memoryAllocator->readMemory(allocatedMemoryBlock, addr);
+    if (!symbolTable.hasVar(varName))
+        throw std::runtime_error("Variable '" + varName + "' not declared.");
+
+    uintptr_t addr = symbolTable.getAddress(varName);
+
+    if (memoryAllocator && allocatedMemoryBlock)
+        return memoryAllocator->readMemory(allocatedMemoryBlock, addr);
+
+    return 0; // not yet allocated
 }
 
 bool Process::hasVariable(const std::string& varName) const {

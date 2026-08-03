@@ -7,7 +7,6 @@
 #include "../Commands/ICommand.hpp"
 #include "../Commands/AddCommand.hpp"
 #include "../SymbolTable/SymbolTable.hpp"
-#include "../Memory/DemandPagingAllocator.hpp"
 
 class IMemoryAllocator; // Forward declaration
 
@@ -22,7 +21,7 @@ public:
         TERMINATED_VIOLATION // shut down early due to memory access violation
     };
 
-    Process(int p_id, std::string name);
+    Process(int p_id, std::string name, size_t memRequired);
 
     void generateInstructions(int numInstructions);
     void loadInstructions(const std::vector<std::shared_ptr<ICommand>>& instructions);

@@ -8,44 +8,18 @@
 #include "Scheduler.hpp"
 #include <random>
 #include <cmath>
-#include "../Memory/DemandPagingAllocator.hpp"
+#include <optional>
 
 using namespace std;
-
-// Picks a random memory size for a process
-// within the min/max bounds from config.txt.
-size_t Scheduler::randomPowerofTwoMemSize() const {
-
-    int minExp = static_cast<int>(std::log2(config.minMemPerProc));
-    int maxExp = static_cast<int>(std::log2(config.maxMemPerProc));
-
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<int> dist(minExp, maxExp);
-
-    int exponent = dist(rng);
-    return static_cast<size_t>(1) << exponent; // 2^exponent
-}
 
 void Scheduler::initialize(const Config& cfg) {
     this->config = cfg;
     processQueues.resize(cfg.numCPU);
-
-    if (cfg.maxOverallMem > 0 && cfg.memPerFrame > 0) {
-        memoryAllocator = std::make_unique<DemandPagingAllocator>(cfg.maxOverallMem, cfg.memPerFrame);
-    } else {
-        memoryAllocator.reset();
-    }
 }
 
-void Scheduler::addProcess(std::shared_ptr<Process> process, std::optional<size_t> memSize) { // specify the memsize properly
+void Scheduler::addProcess(std::shared_ptr<Process> process) {
     lock_guard<mutex> lock(queueMutex);
-    if (process) {
-        size_t buffer = memSize.has_value() ? *memSize : randomPowerofTwoMemSize();
-
-        process->setMemoryRequirement(buffer);
-    }
     processQueues[nextCore].push_back(process);
-
     nextCore = (nextCore + 1) % config.numCPU;
 }
 
@@ -88,17 +62,13 @@ bool Scheduler::tryAdmitProcess(const std::shared_ptr<Process>& process) {
         return true;
     }
 
-    void* block = nullptr;
-    if (auto* dpAllocator = dynamic_cast<DemandPagingAllocator*>(memoryAllocator.get())) {
-        block = dpAllocator->allocate(process);
-    } 
+	void* block = memoryAllocator->allocate(process);
 
     if (block == nullptr) {
         return false;
     }
 
     process->setMemoryAllocatedBlock(block);
-    process->setMemoryAllocator(memoryAllocator.get());
     memoryResidentProcesses.push_back(process);
     return true;
 }

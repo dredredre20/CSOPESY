@@ -6,7 +6,9 @@
 #include <cstdint>
 #include <stdexcept>
 #include <deque>
-#include "../Process/Process.hpp"
+#include <memory>
+
+class Process;
 
 // Thrown when a process tries to access memory that it does not have permission to access.
 class MemoryAccessViolationException : public std::runtime_error {

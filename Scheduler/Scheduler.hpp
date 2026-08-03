@@ -7,13 +7,14 @@
 #include <thread>
 #include <map>
 #include <memory>
+#include <optional>
 
 class Scheduler {
 public:
 	virtual ~Scheduler() = default;
 
 	void initialize(const Config& config);
-	void addProcess(std::shared_ptr<Process> process, std::optional<size_t> memSize);
+	void addProcess(std::shared_ptr<Process> process);
 	void start();
 	void stop();
 
@@ -23,7 +24,6 @@ public:
 	void visualizeDetailedMemory();
 
 	std::shared_ptr<Process> findProcessByName(const std::string& name);
-	size_t randomPowerofTwoMemSize() const;
 
 	std::atomic<size_t> activeCPUTicks{0};
 	std::atomic<size_t> idleCPUTicks{0};

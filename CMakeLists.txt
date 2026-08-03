@@ -25,7 +25,7 @@ add_executable(MyProject
     ConsoleUI/MainMenuConsole.cpp
     ConsoleUI/ProcessConsole.cpp
     Memory/DemandPagingAllocator.cpp
-    )
+     "Memory/MemoryManager.cpp")
 
 # Optional: include directories
 # target_include_directories(MyProject PRIVATE include/)

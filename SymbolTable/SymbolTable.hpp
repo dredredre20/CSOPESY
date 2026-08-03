@@ -3,11 +3,11 @@
 #include <string>
 
 class SymbolTable {
+public:
     static constexpr int MAX_SIZE_BYTES = 64;
     static constexpr int BYTES_PER_VAR = 2;
 	static constexpr int MAX_VARS = MAX_SIZE_BYTES / BYTES_PER_VAR;
 
-    public:
         void declareVar(const std::string& varName);
         uintptr_t getAddress(const std::string& varName) const;
         bool hasVar(const std::string& varName) const;
