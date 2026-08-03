@@ -47,47 +47,6 @@ string Scheduler::getTimestamp() {
     return oss.str();
 }
 
-// Tries to give a process its memory allocation (virtual address space
-// registration
-bool Scheduler::tryAdmitProcess(const std::shared_ptr<Process>& process) {
-    if (!process || !memoryAllocator) {
-        return true;
-    }
-
-    if (process->isMemoryAllocated()) {
-        return true; 
-    }
-
-    if (process->getMemoryRequirement() <= 0) {
-        return true;
-    }
-
-	void* block = memoryAllocator->allocate(process);
-
-    if (block == nullptr) {
-        return false;
-    }
-
-    process->setMemoryAllocatedBlock(block);
-    memoryResidentProcesses.push_back(process);
-    return true;
-}
-
-void Scheduler::releaseProcessMemory(const std::shared_ptr<Process>& process) {
-    if (!process || !process->isMemoryAllocated() || !memoryAllocator) {
-        return;
-    }
-
-    memoryAllocator->deallocate(process->getMemoryAllocatedBlock());
-    process->clearMemoryAllocation();
-
-    memoryResidentProcesses.erase(
-        std::remove_if(memoryResidentProcesses.begin(), memoryResidentProcesses.end(),
-            [&](const std::shared_ptr<Process>& p) { return p == process; }),
-        memoryResidentProcesses.end());
-}
-
-
 void Scheduler::screenLs() {
     lock_guard<mutex> lock(queueMutex);
 
@@ -209,7 +168,7 @@ void Scheduler::reportUtil() {
 
     std::cout << "Report saved to csopesy-log.txt\n";
 }
-
+/*
 // For debugging
 void Scheduler::visualizeHighLevelMemory() {
     if (memoryAllocator) {
@@ -217,7 +176,8 @@ void Scheduler::visualizeHighLevelMemory() {
         memVisual = memoryAllocator->visualizeHighLevelMemory();
 
         std::cout << memVisual << std::endl;
-    } else {
+    }
+    else {
         std::cout << "No memory allocator initialized.\n";
     }
 }
@@ -229,7 +189,9 @@ void Scheduler::visualizeDetailedMemory() {
         memVisual = memoryAllocator->visualizeDetailedMemory(this->activeCPUTicks, this->idleCPUTicks);
 
         std::cout << memVisual << std::endl;
-    } else {
+    }
+    else {
         std::cout << "No memory allocator initialized.\n";
     }
 }
+*/

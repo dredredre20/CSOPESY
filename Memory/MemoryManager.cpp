@@ -44,3 +44,43 @@ std::string MemoryManager::visualizeHighLevelMemory() const {
 std::string MemoryManager::visualizeDetailedMemory(size_t active, size_t idle) const {
 	return allocator->visualizeDetailedMemory(active, idle);
 }
+
+// Tries to give a process its memory allocation (virtual address space
+// registration
+bool MemoryManager::tryAdmitProcess(const std::shared_ptr<Process>& process) {
+    if (!process || !allocator) {
+        return true;
+    }
+
+    if (process->isMemoryAllocated()) {
+        return true;
+    }
+
+    if (process->getMemoryRequirement() <= 0) {
+        return true;
+    }
+
+    void* block = allocator->allocate(process);
+
+    if (block == nullptr) {
+        return false;
+    }
+
+    process->setMemoryAllocatedBlock(block);
+    memoryResidentProcesses.push_back(process);
+    return true;
+}
+
+void MemoryManager::releaseProcessMemory(const std::shared_ptr<Process>& process) {
+    if (!process || !process->isMemoryAllocated() || !allocator) {
+        return;
+    }
+
+    allocator->deallocate(process->getMemoryAllocatedBlock());
+    process->clearMemoryAllocation();
+
+    memoryResidentProcesses.erase(
+        std::remove_if(memoryResidentProcesses.begin(), memoryResidentProcesses.end(),
+            [&](const std::shared_ptr<Process>& p) { return p == process; }),
+        memoryResidentProcesses.end());
+}

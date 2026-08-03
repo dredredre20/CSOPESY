@@ -1,5 +1,6 @@
 #include "RRScheduler.hpp"
 #include "../Process/Process.hpp"
+#include "../Memory/MemoryManager.hpp"
 #include <thread>
 #include <chrono>
 
@@ -30,7 +31,7 @@ void RRScheduler::runCycle(int coreId) {
                         continue;
                     }
 
-                    if (tryAdmitProcess(candidate)) {
+                    if (MemoryManager::getInstance()->tryAdmitProcess(candidate)) {
                         currentProcess = candidate;
                         break;
                     } else {
@@ -42,9 +43,6 @@ void RRScheduler::runCycle(int coreId) {
         }
         
         if (currentProcess) {
-            // active tick
-            this->activeCPUTicks++;
-
             currentProcess->setCPUCoreID(coreId);
 
             {
@@ -64,12 +62,14 @@ void RRScheduler::runCycle(int coreId) {
                         currentProcess->wake();
                         currentProcess->moveToNextLine();
                     }
+                    this->idleCPUTicks++;
                     this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
                     continue;
                 }
                 
                 currentProcess->executeCurrentCommand(coreId);
                 currentProcess->moveToNextLine();
+                this->activeCPUTicks++;
                 this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
@@ -79,7 +79,7 @@ void RRScheduler::runCycle(int coreId) {
                 runningProcesses.erase(coreId);
 
                 if (currentProcess->isFinished()) {
-                    releaseProcessMemory(currentProcess);
+                    MemoryManager::getInstance()->releaseProcessMemory(currentProcess);
                     finishedProcesses.push_back(currentProcess);
                 } else {
                     processQueues[coreId].push_back(currentProcess);

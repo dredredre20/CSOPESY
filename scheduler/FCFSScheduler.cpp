@@ -1,4 +1,5 @@
 #include "FCFSScheduler.hpp"
+#include "../Memory/MemoryManager.hpp"
 #include <thread>
 #include <chrono>
 #include <mutex>
@@ -19,7 +20,7 @@ void FCFSScheduler::runCycle(int coreId) {
                 currentProcess = processQueues[coreId].front();
                 processQueues[coreId].erase(processQueues[coreId].begin());
 
-                if (!tryAdmitProcess(currentProcess)) {
+                if (!MemoryManager::getInstance()->tryAdmitProcess(currentProcess)) {
                     processQueues[coreId].push_back(currentProcess);
                     currentProcess.reset();
                 }
@@ -45,22 +46,25 @@ void FCFSScheduler::runCycle(int coreId) {
                         currentProcess->wake();
                         currentProcess->moveToNextLine();
                     }
+                    idleCPUTicks++;
                     this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
                     continue;
                 }
 
                 currentProcess->executeCurrentCommand(coreId);
                 currentProcess->moveToNextLine();
+                activeCPUTicks++;
                 this_thread::sleep_for(chrono::milliseconds(config.delayPerExec));
             }
 
             {
                 lock_guard<mutex> lock(queueMutex);
                 runningProcesses.erase(coreId);
-                releaseProcessMemory(currentProcess);
+                MemoryManager::getInstance()->releaseProcessMemory(currentProcess);
                 finishedProcesses.push_back(currentProcess);
             }
         } else {
+            idleCPUTicks++;
             this_thread::sleep_for(chrono::milliseconds(50));
         }
     }

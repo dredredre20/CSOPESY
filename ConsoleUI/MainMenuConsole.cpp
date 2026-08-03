@@ -10,6 +10,7 @@
 #include <sstream>
 #include <random>
 #include <cmath>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -108,7 +109,7 @@ void MainMenuConsole::process(){
 // Helper functions to process the commands
 
 static bool runningProcesses = true; // flag for generating the dummy processes
-static void generateProcesses(Scheduler& scheduler, int numProcesses, const Config& cfg) {
+static void generateProcesses(Scheduler& scheduler, const Config& cfg) {
     
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -117,6 +118,9 @@ static void generateProcesses(Scheduler& scheduler, int numProcesses, const Conf
     auto validMemSizes = getPowersOfTwo(cfg.minMemPerProc, cfg.maxMemPerProc);
 	std::uniform_int_distribution<> distMem(0, static_cast<int>(validMemSizes.size())  - 1);
 
+    // Number of processes to be defined depending on memory size
+	int numProcesses = static_cast<int>(cfg.maxOverallMem / cfg.minMemPerProc);
+    
     for (int i = 1; i <= numProcesses; ++i) {
 
         if (!runningProcesses) break;
@@ -129,13 +133,6 @@ static void generateProcesses(Scheduler& scheduler, int numProcesses, const Conf
         std::shared_ptr<Process> p = std::make_shared<Process>(i, name, memSize);
 		p->setMemoryAllocator(memManager->getAllocator());
         p->generateInstructions(distIns(gen));
-        
-        void* block = memManager->allocate(p);
-        if (!block) {
-            std::cout << "Error: Allocation failed for '" << name << "'.\n";
-            return;
-        }
-        p->setMemoryAllocatedBlock(block);
 
         scheduler.addProcess(p);
 
@@ -313,13 +310,6 @@ void MainMenuConsole:: handleScreenSCommand(const std::string &input){
     // Populate with dummy commands
     newProcess->generateInstructions(distIns(gen));
 
-    void* block = memManager->allocate(newProcess);
-    if (!block) {
-        std::cout << "Error: Allocation failed for '" << processName << "'.\n";
-        return;
-    }
-	newProcess->setMemoryAllocatedBlock(block);
-
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);
     
@@ -405,7 +395,7 @@ void MainMenuConsole::handleScreenCCommand(const std::string& input) {
 void MainMenuConsole::handleSchedulerStartCommand() {
     // Generate processes on a detached thread so CLI stays responsive
     std::thread([this]() {
-        generateProcesses(*this->scheduler, 50, this->config);
+        generateProcesses(*this->scheduler, this->config);
         }).detach();
 
     std::cout << "Scheduler started.\n";
@@ -442,29 +432,23 @@ void MainMenuConsole::handleScreenLsCommand() {
 
 // Logic for handling the process-smi command
 void MainMenuConsole::handleProcessSMICommand() {
-
-    // Memory can be accessed through the scheduler, so call the SMI through there
-
-    if (!this->scheduler) {
-        std::cout << "Error: Scheduler not initialized.\n";
-    } else {
-        this->scheduler->visualizeHighLevelMemory();
+    auto memManager = MemoryManager::getInstance();
+    if (!memManager) {
+        std::cout << "Error: Memory manager not initialized.\n";
+        return;
     }
-
-    std::cout << std::endl;
-    
+    std::cout << memManager->visualizeHighLevelMemory() << "\n";
 }
 
 
 // Logic for handling the vmstat command
 void MainMenuConsole::handleVmStatCommand(){
-
-    if (!this->scheduler) {
-        std::cout << "Error: Scheduler not initialized.\n";
-    } else {
-        this->scheduler->visualizeDetailedMemory();
+    auto memManager = MemoryManager::getInstance();
+    if (!memManager) {
+        std::cout << "Error: Memory manager not initialized.\n";
+        return;
     }
-
-    std::cout << std::endl;
-
+    std::cout << memManager->visualizeDetailedMemory(
+        scheduler->activeCPUTicks,
+        scheduler->idleCPUTicks) << "\n";
 }

@@ -20,6 +20,11 @@ public:
 	std::string visualizeHighLevelMemory() const;
 	std::string visualizeDetailedMemory(size_t active, size_t idle) const;
 
+	std::vector<std::shared_ptr<Process>> memoryResidentProcesses;
+
+	bool tryAdmitProcess(const std::shared_ptr<Process>& process);
+	void releaseProcessMemory(const std::shared_ptr<Process>& process);
+
 	IMemoryAllocator* getAllocator() const { return allocator.get(); }
 
 private:
