@@ -119,7 +119,7 @@ static void generateProcesses(Scheduler& scheduler, const Config& cfg) {
 	std::uniform_int_distribution<> distMem(0, static_cast<int>(validMemSizes.size())  - 1);
 
     // Number of processes to be defined depending on memory size
-	int numProcesses = static_cast<int>(cfg.maxOverallMem / cfg.minMemPerProc);
+	int numProcesses = cfg.batchFreq;
     
     for (int i = 1; i <= numProcesses; ++i) {
 
