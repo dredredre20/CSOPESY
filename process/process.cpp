@@ -115,51 +115,103 @@ void Process::loadInstructions(const std::vector<std::shared_ptr<ICommand>>& ins
     commandList.insert(commandList.end(), instructions.begin(), instructions.end());
 }
 
+
+
 // Helper function to parse instructions from a string
 void Process::parseInstructions(const std::string& instructions) {
-    std::istringstream stream(instructions);
+    // Normalize escaped quotes (\") down to plain quotes so PRINT statements
+    // like PRINT(\"text\" + var) can be scanned with simple quote-matching.
+    std::string cleaned = instructions;
+    for (size_t pos = 0; (pos = cleaned.find("\\\"", pos)) != std::string::npos; ) {
+        cleaned.replace(pos, 2, "\"");
+        pos += 1;
+    }
+
+    std::istringstream stream(cleaned);
     std::string token;
 
     while (std::getline(stream, token, ';')) {
-		std::istringstream lineStream(token);
-		std::string commandType;
-		lineStream >> commandType;
-		if (commandType == "DECLARE") {
-			std::string varName;
-			uint16_t value;
-			lineStream >> varName >> value;
-			commandList.push_back(std::make_shared<DeclareCommand>(varName, value));
-		}
-		else if (commandType == "PRINT") {
-			std::string message;
-			std::getline(lineStream, message);
-			commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, message));
-		}
-		else if (commandType == "ADD") {
-			std::string resultVar, operandA, operandB;
-			lineStream >> resultVar >> operandA >> operandB;
-			commandList.push_back(std::make_shared<AddCommand>(resultVar, operandA, operandB));
-		}
-		else if (commandType == "SUBTRACT") {
-			std::string resultVar, operandA, operandB;
-			lineStream >> resultVar >> operandA >> operandB;
-			commandList.push_back(std::make_shared<SubtractCommand>(resultVar, operandA, operandB));
-		}
-		else if (commandType == "SLEEP") {
-			uint8_t ticks;
-			lineStream >> ticks;
-			commandList.push_back(std::make_shared<SleepCommand>(ticks));
-		}
+        // Trim surrounding whitespace
+        size_t s = token.find_first_not_of(" \t");
+        if (s == std::string::npos) continue; // blank segment, skip
+        size_t e = token.find_last_not_of(" \t");
+        token = token.substr(s, e - s + 1);
+
+        // Split off the command keyword. Stop at the first space OR '(' so that
+        // "PRINT(...)" (no space before the parenthesis) is still recognized.
+        size_t kwEnd = token.find_first_of(" (");
+        std::string commandType = (kwEnd == std::string::npos) ? token : token.substr(0, kwEnd);
+        std::string rest = (kwEnd == std::string::npos) ? std::string() : token.substr(kwEnd);
+
+        std::istringstream lineStream(rest);
+
+        if (commandType == "DECLARE") {
+            std::string varName;
+            uint16_t value;
+            lineStream >> varName >> value;
+            commandList.push_back(std::make_shared<DeclareCommand>(varName, value));
+        }
+        else if (commandType == "PRINT") {
+            // Trim leading/trailing whitespace from what's left after "PRINT"
+            std::string content = rest;
+            size_t cs = content.find_first_not_of(" \t");
+            size_t ce = content.find_last_not_of(" \t");
+            content = (cs == std::string::npos) ? std::string() : content.substr(cs, ce - cs + 1);
+
+            // Strip wrapping parentheses: PRINT(...)
+            if (!content.empty() && content.front() == '(' && content.back() == ')') {
+                content = content.substr(1, content.size() - 2);
+            }
+
+            // Look for the "text" + varName pattern
+            size_t q1 = content.find('"');
+            size_t q2 = (q1 != std::string::npos) ? content.find('"', q1 + 1) : std::string::npos;
+
+            if (q1 != std::string::npos && q2 != std::string::npos) {
+                std::string message = content.substr(q1 + 1, q2 - q1 - 1);
+                std::string after = content.substr(q2 + 1);
+                size_t plusPos = after.find('+');
+                if (plusPos != std::string::npos) {
+                    std::string varName = after.substr(plusPos + 1);
+                    size_t vs = varName.find_first_not_of(" \t");
+                    size_t ve = varName.find_last_not_of(" \t");
+                    varName = (vs == std::string::npos) ? std::string() : varName.substr(vs, ve - vs + 1);
+                    commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, message, varName));
+                }
+                else {
+                    commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, message));
+                }
+            }
+            else {
+                // Fallback: no quotes found, treat the whole thing as a literal message
+                commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, content));
+            }
+        }
+        else if (commandType == "ADD") {
+            std::string resultVar, operandA, operandB;
+            lineStream >> resultVar >> operandA >> operandB;
+            commandList.push_back(std::make_shared<AddCommand>(resultVar, operandA, operandB));
+        }
+        else if (commandType == "SUBTRACT") {
+            std::string resultVar, operandA, operandB;
+            lineStream >> resultVar >> operandA >> operandB;
+            commandList.push_back(std::make_shared<SubtractCommand>(resultVar, operandA, operandB));
+        }
+        else if (commandType == "SLEEP") {
+            uint8_t ticks;
+            lineStream >> ticks;
+            commandList.push_back(std::make_shared<SleepCommand>(ticks));
+        }
         else if (commandType == "READ") {
-			std::string varName;
-			uintptr_t address;
-            lineStream >> varName >> address;
+            std::string varName;
+            uintptr_t address;
+            lineStream >> varName >> std::hex >> address;
             commandList.push_back(std::make_shared<ReadCommand>(varName, address));
         }
         else if (commandType == "WRITE") {
-            std::string varName;
             uintptr_t address;
-            lineStream >> address >> varName;
+            std::string varName;
+            lineStream >> std::hex >> address >> varName;
             commandList.push_back(std::make_shared<WriteCommand>(address, varName));
         }
     }

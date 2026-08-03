@@ -362,33 +362,80 @@ void MainMenuConsole::handleScreenRCommand(const std::string &input){
     }
 }
 
+
+
 void MainMenuConsole::handleScreenCCommand(const std::string& input) {
+
     std::string args = input.substr(10);
+
     args.erase(std::remove(args.begin(), args.end(), '\''), args.end());
 
     std::istringstream iss(args);
     std::string processName;
-    std::string memorySizeStr;
     std::string instructions;
 
-	if (!(iss >> processName >> memorySizeStr)) {
-		std::cout << "Error: Usage is 'screen -c <process_name> <process_memory_size> <instructions>'.\n";
-		return;
-	}
-
-    size_t memorySize = 0;
-
-    try {
-        memorySize = std::stoul(memorySizeStr);
-    }
-    catch (...) {
-        std::cout << "Error: Invalid memory allocation.\n";
+    if (!(iss >> processName)) {
+        std::cout << "Error: Usage is 'screen -c <process_name> [process_memory_size] <instructions>'.\n";
         return;
     }
 
-    std::getline(iss, instructions);
-    std::shared_ptr<Process> process = scheduler->findProcessByName(processName);
-    process->parseInstructions(instructions);
+    size_t memorySize = config.minMemPerProc;  // Default to minimum allowed memory size
+
+    // Skip the whitespace between the process name and whatever comes next
+    while (iss.peek() == ' ') iss.get();
+    if (iss.peek() != '"' && iss.peek() != std::char_traits<char>::eof()) {
+
+        std::streampos beforeToken = iss.tellg();
+        std::string maybeMemory;
+        iss >> maybeMemory;
+
+        try {
+            memorySize = std::stoul(maybeMemory);
+        }
+        catch (...) {
+            iss.seekg(beforeToken);
+        }
+    }
+    while (iss.peek() == ' ') iss.get();
+    std::string rawInstructions;
+    std::getline(iss, rawInstructions);
+
+    // Strip exactly one pair of surrounding double quotes, if present
+    if (rawInstructions.size() >= 2 && rawInstructions.front() == '"' && rawInstructions.back() == '"') {
+        instructions = rawInstructions.substr(1, rawInstructions.size() - 2);
+    } else {
+        instructions = rawInstructions;
+    }
+
+    // Validate memory size (should be a power of 2, in range [2^6, 2^16])
+    config.validateProcessMemSize(static_cast<int>(memorySize));
+
+    // Create the process and assign memory
+    static int nextProcessId = 1;
+    auto newProcess = std::make_shared<Process>(nextProcessId++, processName, memorySize);
+    auto memManager = MemoryManager::getInstance();
+
+    // Validate if there is memory available
+    if (memorySize > memManager->getFreeSize()) {
+        std::cout << "Error: Not enough memory available for process '" << processName << "'.\n";
+        return;
+    }
+    newProcess->setMemoryAllocator(memManager->getAllocator());
+
+    // Parse the instructions provided by the user
+    newProcess->parseInstructions(instructions);
+    // Add the process to the scheduler
+    this->scheduler->addProcess(newProcess);
+
+    // Wait until scheduler assigns a core
+    while (newProcess->getCPUCoreID() == -1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    auto manager = ConsoleManager::getInstance();
+    // Attach the process to the process console
+    manager->attachProcess(newProcess);
+    manager->switchConsole(PROCESS_CONSOLE);
+
 }
 
 // Logic for handling the scheduler -start command
