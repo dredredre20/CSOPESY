@@ -152,41 +152,44 @@ void Process::parseInstructions(const std::string& instructions) {
             commandList.push_back(std::make_shared<DeclareCommand>(varName, value));
         }
         else if (commandType == "PRINT") {
-            // Trim leading/trailing whitespace from what's left after "PRINT"
-            std::string content = rest;
-            size_t cs = content.find_first_not_of(" \t");
-            size_t ce = content.find_last_not_of(" \t");
-            content = (cs == std::string::npos) ? std::string() : content.substr(cs, ce - cs + 1);
+            // use of lambda function to trim the string of whitespaces
+            auto trim = [](std::string s) {
+                size_t a = s.find_first_not_of(" \t");
+                size_t b = s.find_last_not_of(" \t");
+                return (a == std::string::npos) ? std::string() : s.substr(a, b - a + 1);
+                };
 
-            // Strip wrapping parentheses: PRINT(...)
-            if (!content.empty() && content.front() == '(' && content.back() == ')') {
+            std::string content = trim(rest);
+
+            if (content.size() >= 2 && content.front() == '(' && content.back() == ')') {
                 content = content.substr(1, content.size() - 2);
             }
 
-            // Look for the "text" + varName pattern
+            // Locate the first pair of quotes containing the text message
             size_t q1 = content.find('"');
             size_t q2 = (q1 != std::string::npos) ? content.find('"', q1 + 1) : std::string::npos;
 
-            if (q1 != std::string::npos && q2 != std::string::npos) {
-                std::string message = content.substr(q1 + 1, q2 - q1 - 1);
-                std::string after = content.substr(q2 + 1);
-                size_t plusPos = after.find('+');
-                if (plusPos != std::string::npos) {
-                    std::string varName = after.substr(plusPos + 1);
-                    size_t vs = varName.find_first_not_of(" \t");
-                    size_t ve = varName.find_last_not_of(" \t");
-                    varName = (vs == std::string::npos) ? std::string() : varName.substr(vs, ve - vs + 1);
-                    commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, message, varName));
-                }
-                else {
-                    commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, message));
-                }
+            if (q1 == std::string::npos || q2 == std::string::npos) {
+                // Fallback: no quotes found, treat whole thing as literal message
+                commandList.push_back(std::make_shared<PrintCommand>(p_id, name, content));
+                return;
+            }
+
+            // Extract message inside quotes and check for variable 
+            std::string message = content.substr(q1 + 1, q2 - q1 - 1);
+            size_t plusPos = content.find('+', q2);
+
+            if (plusPos == std::string::npos) {
+                // print command for string literal
+                commandList.push_back(std::make_shared<PrintCommand>(p_id, name, message));
             }
             else {
-                // Fallback: no quotes found, treat the whole thing as a literal message
-                commandList.push_back(std::make_shared<PrintCommand>(this->p_id, this->name, content));
+                // print command for string with string and variable
+                std::string varName = trim(content.substr(plusPos + 1));
+                commandList.push_back(std::make_shared<PrintCommand>(p_id, name, message, varName));
             }
         }
+        
         else if (commandType == "ADD") {
             std::string resultVar, operandA, operandB;
             lineStream >> resultVar >> operandA >> operandB;
