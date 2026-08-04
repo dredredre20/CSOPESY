@@ -111,7 +111,7 @@ void Scheduler::processSMI() {
         oss << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
         oss << "--------------------------------------------------\n";
         oss << "CPU-Util: " << fixed << setprecision(2) << cpuUtilization << "%\n";
-        oss << "Memory Usage: " << snap.allocatedSize << "MiB / " << snap.capacitySize << "MiB\n";
+        oss << "Memory Usage: " << snap.allocatedSize << "KB / " << snap.capacitySize << "KB\n";
         oss << "Memory Util: " << memUtil << "%\n\n";
         oss << "==================================================\n";
         oss << "Running processes and memory usage:\n";
@@ -119,7 +119,7 @@ void Scheduler::processSMI() {
 
         for (const auto& [name, bytes] : snap.processResidentBytes) {
             if (bytes > 0)
-                oss << name << " " << bytes << "MiB\n";
+                oss << name << " " << bytes << "KB\n";
         }
         oss << "--------------------------------------------------\n";
 
