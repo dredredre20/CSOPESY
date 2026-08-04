@@ -395,6 +395,15 @@ void MainMenuConsole::handleScreenCCommand(const std::string& input) {
         instructions = rawInstructions;
     }
 
+    // Check if the command by the user follows proper size instructions
+    size_t instructionCount = 1 + std::count(instructions.begin(), instructions.end(), ';');
+    size_t is = instructions.find_first_not_of(" \t");
+
+    if (instructions.empty() || instructionCount < 1 || instructionCount > 50 || is == std::string::npos) {
+        std::cout << "Error: invalid command.\n";
+        return;
+    }
+
     // Validate memory size (should be a power of 2, in range [2^6, 2^16])
     config.validateProcessMemSize(static_cast<int>(memorySize));
 
