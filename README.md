@@ -2,10 +2,10 @@
 Operating Systems Repository
 
 Members:
-Chu, Andre
-Monloy, Kharlene
-Rocha, Angelo
-Tolentino, Nathaniel
+- Chu, Andre
+- Monloy, Kharlene
+- Rocha, Angelo
+- Tolentino, Nathaniel
 
 Running Instructions: 
 - In Microsoft Visual Studio: Select the Green Start Arrow
