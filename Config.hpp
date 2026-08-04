@@ -39,9 +39,6 @@ struct Config {
 		for (const auto& [name, value] : fields) {
 			if (!isPowerOfTwo(value))
 				throw std::runtime_error("Error: " + name + " must be a power of 2.");
-
-			if (!isInMemRange(value))
-				throw std::runtime_error("Error: " + name + " must be in the range [2^6, 2^16].");
 		}
 
 		if (memPerFrame > maxOverallMem)
@@ -49,10 +46,6 @@ struct Config {
 
 		if (minMemPerProc > maxMemPerProc)
 			throw std::runtime_error("Error: min-mem-per-proc cannot exceed max-mem-per-proc.");
-
-		// Process should have minimum of 64 bytes for symbol table
-		if (minMemPerProc < MEM_MIN)
-			throw std::runtime_error("Error: min-mem-per-proc must be at least 64");
 	}
 
 	void validateProcessMemSize(int processMemSize) const {

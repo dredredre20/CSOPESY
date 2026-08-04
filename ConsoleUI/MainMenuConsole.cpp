@@ -210,7 +210,7 @@ void MainMenuConsole::handleInitializeCommand() {
     }
     file.close();
 
-	config.validateMemory(); // Validate memory constraints
+	// config.validateMemory(); // Validate memory constraints
 
     // 3. Initialize Memory Manager
     MemoryManager::getInstance()->initialize(

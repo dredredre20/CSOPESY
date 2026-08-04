@@ -35,7 +35,7 @@ DemandPagingAllocator::~DemandPagingAllocator() {
 // called and triggers an actual page fault.
 void* DemandPagingAllocator::allocate(std::shared_ptr<Process> process) {
     {
-        std::lock_guard<std::mutex> lock(allocatorMutex);
+        std::lock_guard<std::recursive_mutex> lock(allocatorMutex);
         
         size_t size = process -> getMemoryRequirement();
 
@@ -65,7 +65,7 @@ void* DemandPagingAllocator::allocate(std::shared_ptr<Process> process) {
 // This is where the actual page fault handling happens.
 void DemandPagingAllocator::accessPage(void* ptr, size_t pageNum) {
     {
-        std::lock_guard<std::mutex> lock(allocatorMutex);
+        std::lock_guard<std::recursive_mutex> lock(allocatorMutex);
 
         auto it = pointerToAllocationId.find(ptr);
         if (it == pointerToAllocationId.end()) {
@@ -210,7 +210,7 @@ void DemandPagingAllocator::removePageFromBackingStore(long long allocationId, s
 // still sitting in the backing store.
 void DemandPagingAllocator::deallocate(void* ptr) {
     {
-        std::lock_guard<std::mutex> lock(allocatorMutex);
+        std::lock_guard<std::recursive_mutex> lock(allocatorMutex);
 
         auto it = pointerToAllocationId.find(ptr);
         if (it == pointerToAllocationId.end()) {
@@ -246,7 +246,7 @@ void DemandPagingAllocator::deallocate(void* ptr) {
 
 MemorySnapshot DemandPagingAllocator::getMemorySnapshot() {
     {
-        std::lock_guard<std::mutex> lock(allocatorMutex);
+        std::lock_guard<std::recursive_mutex> lock(allocatorMutex);
         MemorySnapshot snap;
         snap.capacitySize = maximumSize;
         snap.allocatedSize = allocatedSize;
@@ -297,54 +297,60 @@ size_t DemandPagingAllocator::resolvePhysicalAddress(void* ptr, long long alloca
 
 // Reads a 16-bit value from the process's virtual address space, handling page faults as needed.
 uint16_t DemandPagingAllocator::readMemory(void* handle, uintptr_t address) {
-    auto it = pointerToAllocationId.find(handle);
+    {
+        std::lock_guard<std::recursive_mutex> lock(allocatorMutex);
 
-	if (it == pointerToAllocationId.end()) {
-		throw std::invalid_argument("Invalid process handle.");
-	}
+        auto it = pointerToAllocationId.find(handle);
 
-	// Get the allocation ID and corresponding record for the process
-    long long allocationId = it->second;
-    auto& record = allocations.at(allocationId);
-	size_t procSize = record.process->getMemoryRequirement();
+        if (it == pointerToAllocationId.end()) {
+            throw std::invalid_argument("Invalid process handle.");
+        }
 
-    if (address + 1 >= procSize) { // check if address still fits within the process's allocated space
-		throw MemoryAccessViolationException(address);
+        // Get the allocation ID and corresponding record for the process
+        long long allocationId = it->second;
+        auto& record = allocations.at(allocationId);
+        size_t procSize = record.process->getMemoryRequirement();
+
+        if (address + 1 >= procSize) { // check if address still fits within the process's allocated space
+            throw MemoryAccessViolationException(address);
+        }
+
+        // calculate physical addresses for the two bytes to read
+        size_t physLow = resolvePhysicalAddress(handle, allocationId, address);
+        size_t physHigh = resolvePhysicalAddress(handle, allocationId, address + 1);
+
+        // Fetch bytes and combine them into a 16-bit value for better type safety and to avoid sign extension issues
+        uint8_t lowByte = static_cast<uint8_t>(physicalMemory[physLow]);
+        uint8_t highByte = static_cast<uint8_t>(physicalMemory[physHigh]);
+
+        return static_cast<uint16_t>(lowByte) | (static_cast<uint16_t>(highByte) << 8);
     }
-
-	// calculate physical addresses for the two bytes to read
-	size_t physLow = resolvePhysicalAddress(handle, allocationId, address);
-	size_t physHigh = resolvePhysicalAddress(handle, allocationId, address + 1);
-
-	// Fetch bytes and combine them into a 16-bit value for better type safety and to avoid sign extension issues
-	uint8_t lowByte = static_cast<uint8_t>(physicalMemory[physLow]);
-	uint8_t highByte = static_cast<uint8_t>(physicalMemory[physHigh]);
-
-	return static_cast<uint16_t>(lowByte) | (static_cast<uint16_t>(highByte) << 8);
 }
 
 
 void DemandPagingAllocator::writeMemory(void* handle, uintptr_t address, uint16_t value) {
-    auto it = pointerToAllocationId.find(handle);
-    if (it == pointerToAllocationId.end()) {
-        throw std::invalid_argument("Invalid process handle.");
+    {
+        std::lock_guard<std::recursive_mutex> lock(allocatorMutex);
+        auto it = pointerToAllocationId.find(handle);
+        if (it == pointerToAllocationId.end()) {
+            throw std::invalid_argument("Invalid process handle.");
+        }
+
+        long long allocationId = it->second;
+        auto& record = allocations.at(allocationId);
+        size_t procSize = record.process->getMemoryRequirement();
+
+        if (address + 1 >= procSize) {
+            throw MemoryAccessViolationException(address);
+        }
+
+        // calculate physical addresses for the two bytes to read
+        size_t physLow = resolvePhysicalAddress(handle, allocationId, address);
+        size_t physHigh = resolvePhysicalAddress(handle, allocationId, address + 1);
+
+        // store the low and high bytes of the 16-bit value directly into the calculated physical addresses
+        // FF is used to mask the 8 bits since physicalMemory is a vector of char
+        physicalMemory[physLow] = static_cast<char>(value & 0xFF);
+        physicalMemory[physHigh] = static_cast<char>((value >> 8) & 0xFF);
     }
-
-    long long allocationId = it->second;
-    auto& record = allocations.at(allocationId);
-    size_t procSize = record.process->getMemoryRequirement();
-
-    if (address + 1 >= procSize) {
-        throw MemoryAccessViolationException(address);
-    }
-
-    // calculate physical addresses for the two bytes to read
-    size_t physLow = resolvePhysicalAddress(handle, allocationId, address);
-    size_t physHigh = resolvePhysicalAddress(handle, allocationId, address + 1);
-
-    // store the low and high bytes of the 16-bit value directly into the calculated physical addresses
-    // FF is used to mask the 8 bits since physicalMemory is a vector of char
-	physicalMemory[physLow] = static_cast<char>(value & 0xFF);
-	physicalMemory[physHigh] = static_cast<char>((value >> 8) & 0xFF);
-
 }
