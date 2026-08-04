@@ -117,8 +117,10 @@ void Scheduler::processSMI() {
         oss << "Running processes and memory usage:\n";
         oss << "--------------------------------------------------\n";
 
-        for (const auto& [name, bytes] : snap.processResidentBytes)
-            oss << name << " " << bytes << "MiB\n";
+        for (const auto& [name, bytes] : snap.processResidentBytes) {
+            if (bytes > 0)
+                oss << name << " " << bytes << "MiB\n";
+        }
         oss << "--------------------------------------------------\n";
 
         cout << oss.str();
