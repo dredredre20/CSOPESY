@@ -376,13 +376,6 @@ void MainMenuConsole::handleScreenCCommand(const std::string& input) {
         std::streampos beforeToken = iss.tellg();
         std::string maybeMemory;
         iss >> maybeMemory;
-
-        try {
-            memorySize = std::stoul(maybeMemory);
-        }
-        catch (...) {
-            iss.seekg(beforeToken);
-        }
     }
     while (iss.peek() == ' ') iss.get();
     std::string rawInstructions;
@@ -403,9 +396,6 @@ void MainMenuConsole::handleScreenCCommand(const std::string& input) {
         std::cout << "Error: invalid command.\n";
         return;
     }
-
-    // Validate memory size (should be a power of 2, in range [2^6, 2^16])
-    config.validateProcessMemSize(static_cast<int>(memorySize));
 
     // Create the process and assign memory
     static int nextProcessId = 1;
