@@ -1,6 +1,6 @@
 #pragma once
 #include "IMemoryAllocator.hpp"
-#include "../process/Process.hpp"
+#include "../Process/Process.hpp"
 #include <vector>
 #include <unordered_map>
 #include <deque>
@@ -69,10 +69,8 @@ public:
     void* allocate(std::shared_ptr<Process> Process) override;
 
     void deallocate(void* ptr) override;
-    // std::string visualizeMemory(std::string command) override;
 
-    std::string visualizeHighLevelMemory() override;
-    std::string visualizeDetailedMemory(size_t activeTicks, size_t idleTicks) override;
+    MemorySnapshot getMemorySnapshot() override;
 
     size_t getCapacity() const override;      
     size_t getAllocatedSize() const override; 

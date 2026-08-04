@@ -6,6 +6,7 @@
 #include <fstream>
 #include <algorithm>
 #include "Scheduler.hpp"
+#include "../Memory/MemoryManager.hpp"
 #include <random>
 #include <cmath>
 #include <optional>
@@ -93,6 +94,56 @@ void Scheduler::screenLs() {
     }
 
     cout << border << "\n";
+}
+
+void Scheduler::processSMI() {
+    {
+        lock_guard<mutex> lock(queueMutex);
+
+        int coresUsed = static_cast<int>(runningProcesses.size());
+        double cpuUtilization = (static_cast<double>(coresUsed) / config.numCPU) * 100.0;
+
+        auto snap = MemoryManager::getInstance()->getMemorySnapshot();
+        long memUtil = std::lround((static_cast<double>(snap.allocatedSize) / snap.capacitySize) * 100.0);
+
+        std::ostringstream oss;
+        oss << "\n--------------------------------------------------\n";
+        oss << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
+        oss << "--------------------------------------------------\n";
+        oss << "CPU-Util: " << fixed << setprecision(2) << cpuUtilization << "%\n";
+        oss << "Memory Usage: " << snap.allocatedSize << "MiB / " << snap.capacitySize << "MiB\n";
+        oss << "Memory Util: " << memUtil << "%\n\n";
+        oss << "==================================================\n";
+        oss << "Running processes and memory usage:\n";
+        oss << "--------------------------------------------------\n";
+
+        for (const auto& [name, bytes] : snap.processResidentBytes)
+            oss << name << " " << bytes << "MiB\n";
+        oss << "--------------------------------------------------\n";
+
+        cout << oss.str();
+    }
+}
+
+void Scheduler::vmstat() {
+    {
+        lock_guard<mutex> lock(queueMutex);
+
+        auto snap = MemoryManager::getInstance()->getMemorySnapshot();
+
+        std::ostringstream oss;
+        oss << std::endl;
+        oss << snap.capacitySize << "\t"/*  */ << "total memory\n";
+        oss << snap.allocatedSize << "\t"/*  */ << "used memory\n";
+        oss << snap.capacitySize - snap.allocatedSize << "\t"/*  */ << "free memory\n";
+        oss << this->idleCPUTicks << "\t"/*  */ << "idle cpu ticks\n";
+        oss << this->activeCPUTicks << "\t"/*  */ << "active cpu ticks\n";
+        oss << this->idleCPUTicks + this->activeCPUTicks << "\t"/*  */ << "total cpu ticks\n";
+        oss << snap.numPagedIn << "\t"/*  */ << "num paged in\n";
+        oss << snap.numPagedOut << "\t"/*  */ << "num paged out\n";
+
+        cout << oss.str();
+    }
 }
 
 std::shared_ptr<Process> Scheduler::findProcessByName(const std::string& name) {

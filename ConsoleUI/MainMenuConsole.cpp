@@ -472,7 +472,7 @@ void MainMenuConsole::handleProcessSMICommand() {
         std::cout << "Error: Memory manager not initialized.\n";
         return;
     }
-    std::cout << memManager->visualizeHighLevelMemory() << "\n";
+    scheduler->processSMI();
 }
 
 
@@ -483,7 +483,5 @@ void MainMenuConsole::handleVmStatCommand(){
         std::cout << "Error: Memory manager not initialized.\n";
         return;
     }
-    std::cout << memManager->visualizeDetailedMemory(
-        scheduler->activeCPUTicks,
-        scheduler->idleCPUTicks) << "\n";
+    scheduler->vmstat();
 }

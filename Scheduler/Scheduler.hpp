@@ -19,6 +19,8 @@ public:
 	void stop();
 
 	void screenLs();
+	void processSMI();
+	void vmstat();
 	void reportUtil();
 
 	std::shared_ptr<Process> findProcessByName(const std::string& name);

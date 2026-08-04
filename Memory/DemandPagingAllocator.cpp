@@ -244,82 +244,21 @@ void DemandPagingAllocator::deallocate(void* ptr) {
     }
 }
 
-std::string DemandPagingAllocator::visualizeHighLevelMemory() {
+MemorySnapshot DemandPagingAllocator::getMemorySnapshot() {
     {
         std::lock_guard<std::mutex> lock(allocatorMutex);
-
-        std::ostringstream oss;
-        oss << "\n\n--------------------------------------------------\n";
-        oss << "| PROCESS-SMI V01.00 Driver Version: 01.00 |\n";
-        oss << "--------------------------------------------------\n";
-
-        size_t currentAllocatedSize = this->getAllocatedSize();
-        size_t capacitySize = this->getCapacity();
-        long memory_util = std::lround((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
-
-        oss << "CPU-Util: " << ""/*  */ << "%\n";
-        oss << "Memory Usage: " << currentAllocatedSize << "MiB " << "/ " << capacitySize << "MiB\n"; // allocated / total memory
-        oss << "Memory Util: " << memory_util << "%\n\n";
-
-        oss << "==================================================\n";
-        oss << "Running processes and memory usage:\n";
-        oss << "--------------------------------------------------\n";
-
-        // loop through each process (allocations)
-        for (const auto& [allocationId, record] : allocations) {
-            size_t residentPages = 0;
-            for (const auto& pte : record.pageTable) {
-                if (pte.valid)
-                    residentPages++;
-            }
-
-            size_t residentBytes = residentPages * frameSize;
-            // size_t virtualBytes = record.process->getMemoryRequirement();
-
-            oss << record.process->getName() << " " << residentBytes << "MiB\n";
+        MemorySnapshot snap;
+        snap.capacitySize = maximumSize;
+        snap.allocatedSize = allocatedSize;
+        for (const auto& [id, record] : allocations) {
+            size_t resident = 0;
+            for (const auto& pte : record.pageTable) if (pte.valid) resident += frameSize;
+            if (resident > 0) snap.processResidentBytes.emplace_back(record.process->getName(), resident);
         }
+        snap.numPagedIn = numPagedIn;
+        snap.numPagedOut = numPagedOut;
 
-        oss << "--------------------------------------------------\n";
-
-
-        /* oss << "Demand Paging Allocator [" << allocatedSize << "/" << maximumSize
-            << " bytes used, " << numFrames << " frames of " << frameSize << " bytes each]\n";
-        oss << "Pages in: " << numPagedIn << ", Pages out: " << numPagedOut << "\n";
-
-        for (size_t i = 0; i < numFrames; ++i) {
-            oss << "Frame " << i << ": ";
-            if (frameOwner[i] == -1) {
-                oss << "free";
-            } else {
-                oss << "allocation #" << frameOwner[i] << " page " << framePage[i];
-            }
-            oss << "\n";
-        } */
-        return oss.str();
-    }
-}
-
-std::string DemandPagingAllocator::visualizeDetailedMemory(size_t activeTicks, size_t idleTicks) {
-    {
-        std::lock_guard<std::mutex> lock(allocatorMutex);
-
-        std::ostringstream oss;
-
-        size_t currentAllocatedSize = this->getAllocatedSize();
-        size_t capacitySize = this->getCapacity();
-        long memory_util = std::lround((static_cast<double>(currentAllocatedSize) / capacitySize) * 100.0);
-
-        oss << std::endl;
-        oss << capacitySize << "\t"/*  */ << "total memory\n";
-        oss << currentAllocatedSize << "\t"/*  */ << "used memory\n";
-        oss << capacitySize - currentAllocatedSize << "\t"/*  */ << "free memory\n";
-        oss << idleTicks << "\t"/*  */ << "idle cpu ticks\n";
-        oss << activeTicks << "\t"/*  */ << "active cpu ticks\n";
-        oss << idleTicks + activeTicks << "\t"/*  */ << "total cpu ticks\n";
-        oss << this->numPagedIn << "\t"/*  */ << "num paged in\n";
-        oss << this->numPagedOut << "\t"/*  */ << "num paged out\n";
-
-        return oss.str();
+        return snap;
     }
 }
 

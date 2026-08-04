@@ -11,6 +11,14 @@
 class Process;
 
 // Thrown when a process tries to access memory that it does not have permission to access.
+struct MemorySnapshot {
+	size_t capacitySize;
+	size_t allocatedSize;
+	std::vector<std::pair<std::string, size_t>> processResidentBytes;
+    size_t numPagedIn;
+    size_t numPagedOut;
+};
+
 class MemoryAccessViolationException : public std::runtime_error {
 public:
     uintptr_t address;
@@ -25,9 +33,7 @@ class IMemoryAllocator {
         virtual void* allocate(std::shared_ptr<Process> process) = 0;
         virtual void deallocate(void* ptr) = 0;
 
-        // virtual std::string visualizeMemory(std::string command) = 0;
-        virtual std::string visualizeHighLevelMemory() = 0;
-        virtual std::string visualizeDetailedMemory(size_t activeTicks, size_t idleTicks) = 0;
+        virtual MemorySnapshot getMemorySnapshot() = 0;
 
         virtual size_t getCapacity() const = 0;
         virtual size_t getAllocatedSize() const = 0;

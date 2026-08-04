@@ -1,6 +1,6 @@
 #pragma once
 #include "IMemoryAllocator.hpp"
-#include "../process/Process.hpp"
+#include "../Process/Process.hpp"
 #include <memory>
 #include <mutex>
 
@@ -18,8 +18,7 @@ public:
 	size_t getAllocatedSize() const;
 	size_t getCapacity() const;
 
-	std::string visualizeHighLevelMemory() const;
-	std::string visualizeDetailedMemory(size_t active, size_t idle) const;
+	MemorySnapshot getMemorySnapshot() const;
 
 	std::vector<std::shared_ptr<Process>> memoryResidentProcesses;
 

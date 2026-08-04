@@ -36,15 +36,6 @@ size_t MemoryManager::getCapacity() const {
 	return allocator->getCapacity();
 }
 
-// Visualization remove from allocator and put in memory
-std::string MemoryManager::visualizeHighLevelMemory() const {
-	return allocator->visualizeHighLevelMemory();
-}
-
-std::string MemoryManager::visualizeDetailedMemory(size_t active, size_t idle) const {
-	return allocator->visualizeDetailedMemory(active, idle);
-}
-
 // Tries to give a process its memory allocation (virtual address space
 // registration
 bool MemoryManager::tryAdmitProcess(const std::shared_ptr<Process>& process) {
@@ -88,4 +79,8 @@ void MemoryManager::releaseProcessMemory(const std::shared_ptr<Process>& process
         std::remove_if(memoryResidentProcesses.begin(), memoryResidentProcesses.end(),
             [&](const std::shared_ptr<Process>& p) { return p == process; }),
         memoryResidentProcesses.end());
+}
+
+MemorySnapshot MemoryManager::getMemorySnapshot() const {
+	return allocator->getMemorySnapshot();
 }
