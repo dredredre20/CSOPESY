@@ -38,6 +38,7 @@ void Process::generateInstructions(int numInstructions) {
 
     for (int i = 0; i < numInstructions; ++i) {
         int roll = i % 9; // cycles through 9 slots
+        uintptr_t randAddr = i % (memoryRequirement > 1 ? memoryRequirement - 1 : 1);
 
         switch (roll) {
         case 0:
@@ -94,7 +95,7 @@ void Process::generateInstructions(int numInstructions) {
         case 7:
 			// READ command - reads from shared memory address into variable "x"
             commandList.push_back(std::make_shared<ReadCommand>(
-                std::string("x"), addrX
+                std::string("x"), randAddr
             ));
 
             break;
@@ -102,7 +103,7 @@ void Process::generateInstructions(int numInstructions) {
         case 8:
 			// WRITE command - writes the value of x to shared memory address
             commandList.push_back(std::make_shared<WriteCommand>(
-                addrX, std::string("x") 
+                randAddr, std::string("x") 
             ));
      
             break;
