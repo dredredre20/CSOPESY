@@ -118,25 +118,29 @@ static void generateProcesses(Scheduler& scheduler, const Config& cfg) {
     auto validMemSizes = getPowersOfTwo(cfg.minMemPerProc, cfg.maxMemPerProc);
 	std::uniform_int_distribution<> distMem(0, static_cast<int>(validMemSizes.size())  - 1);
 
-    // Number of processes to be defined depending on memory size
-	int numProcesses = cfg.batchFreq;
+    int processCounter = 1;
+    size_t lastTickSeen = 0;
     
-    for (int i = 1; i <= numProcesses; ++i) {
+    while (runningProcesses) {
+		size_t currentTicks = scheduler.activeCPUTicks + scheduler.idleCPUTicks;
 
-        if (!runningProcesses) break;
+        if (currentTicks - lastTickSeen < static_cast<size_t>(cfg.batchFreq)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
 
-        std::string name = "process" + std::string(i < 10 ? "0" : "") + std::to_string(i);
-        
-		int memSize = validMemSizes[distMem(gen)];
-		auto memManager = MemoryManager::getInstance();
+        lastTickSeen = currentTicks;
 
-        std::shared_ptr<Process> p = std::make_shared<Process>(i, name, memSize);
-		p->setMemoryAllocator(memManager->getAllocator());
+        std::string name = "process" + std::string(processCounter < 10 ? "0" : "") + std::to_string(processCounter);
+
+        int memSize = validMemSizes[distMem(gen)];
+        auto memManager = MemoryManager::getInstance();
+
+        std::shared_ptr<Process> p = std::make_shared<Process>(processCounter, name, memSize);
         p->generateInstructions(distIns(gen));
 
         scheduler.addProcess(p);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(cfg.batchFreq * 100));
+        processCounter++;
     }
 }
 
@@ -415,10 +419,7 @@ void MainMenuConsole::handleScreenCCommand(const std::string& input) {
     // Add the process to the scheduler
     this->scheduler->addProcess(newProcess);
 
-    // Wait until scheduler assigns a core
-    while (newProcess->getCPUCoreID() == -1) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
+ 
     auto manager = ConsoleManager::getInstance();
     // Attach the process to the process console
     manager->attachProcess(newProcess);

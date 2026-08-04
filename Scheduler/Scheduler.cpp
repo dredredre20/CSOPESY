@@ -168,30 +168,3 @@ void Scheduler::reportUtil() {
 
     std::cout << "Report saved to csopesy-log.txt\n";
 }
-/*
-// For debugging
-void Scheduler::visualizeHighLevelMemory() {
-    if (memoryAllocator) {
-        std::string memVisual;
-        memVisual = memoryAllocator->visualizeHighLevelMemory();
-
-        std::cout << memVisual << std::endl;
-    }
-    else {
-        std::cout << "No memory allocator initialized.\n";
-    }
-}
-
-// For debugging
-void Scheduler::visualizeDetailedMemory() {
-    if (memoryAllocator) {
-        std::string memVisual;
-        memVisual = memoryAllocator->visualizeDetailedMemory(this->activeCPUTicks, this->idleCPUTicks);
-
-        std::cout << memVisual << std::endl;
-    }
-    else {
-        std::cout << "No memory allocator initialized.\n";
-    }
-}
-*/

@@ -2,6 +2,7 @@
 #include "IMemoryAllocator.hpp"
 #include "../process/Process.hpp"
 #include <memory>
+#include <mutex>
 
 class MemoryManager {
 public:
@@ -31,4 +32,6 @@ private:
 	MemoryManager() = default;
 	static MemoryManager* instance;
 	std::shared_ptr<IMemoryAllocator> allocator;
+
+	mutable std::mutex admitMutex;
 };

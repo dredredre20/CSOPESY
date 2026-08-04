@@ -48,6 +48,8 @@ std::string MemoryManager::visualizeDetailedMemory(size_t active, size_t idle) c
 // Tries to give a process its memory allocation (virtual address space
 // registration
 bool MemoryManager::tryAdmitProcess(const std::shared_ptr<Process>& process) {
+	std::lock_guard<std::mutex> lock(admitMutex);
+    
     if (!process || !allocator) {
         return true;
     }
@@ -67,11 +69,14 @@ bool MemoryManager::tryAdmitProcess(const std::shared_ptr<Process>& process) {
     }
 
     process->setMemoryAllocatedBlock(block);
+	process->setMemoryAllocator(allocator.get());
     memoryResidentProcesses.push_back(process);
     return true;
 }
 
 void MemoryManager::releaseProcessMemory(const std::shared_ptr<Process>& process) {
+    std::lock_guard<std::mutex> lock(admitMutex);
+    
     if (!process || !process->isMemoryAllocated() || !allocator) {
         return;
     }
