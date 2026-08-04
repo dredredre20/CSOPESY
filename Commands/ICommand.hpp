@@ -1,19 +1,21 @@
 #pragma once
 
+class Process;
+
 class ICommand {
 public:
     enum CommandType {
-        PRINT
+        PRINT,
+        DECLARE,
+        ADD,
+        SUBTRACT,
+        SLEEP,
+        FOR, 
+        READ, 
+        WRITE
     };
 
-    ICommand(int p_id, CommandType commandType);
     virtual ~ICommand() = default;
-
-    CommandType getCommandType() const;
-
-    virtual void execute(int coreId) = 0;
-
-protected:
-    int p_id;
-    CommandType commandType;
+    virtual CommandType getCommandType() const = 0;
+    virtual void execute(int coreId, Process& process) = 0;
 };

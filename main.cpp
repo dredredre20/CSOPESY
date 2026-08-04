@@ -2,26 +2,26 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
+#include <ctime>
 #include <vector>
-
+#include "ConsoleUI/ConsoleManager.hpp"
 #include "Scheduler/FCFSScheduler.hpp"
 #include "Design_Utils/DesignAssets.hpp"
-#include "CommandManager/CommandManager.hpp"
 
 int main() {
-
+    ConsoleManager::initialize();
     bool keepRunning = true;
+    ConsoleManager* console_manager = ConsoleManager::getInstance();
 
-    designAssets da;
-    da.welcomeMenu();
-    
-    CommandManager cmdManager(4); // declare 4 cores
-
-    // The loop runs until processCommand() returns false
+    srand(static_cast<unsigned>(time(nullptr))); // seed for randomization
+    // The loop runs until keepRunning returns false
     while (keepRunning) {
-        // Loop continues
-        keepRunning = cmdManager.processCommand();
+        console_manager -> process();
+
+        keepRunning = ConsoleManager::getInstance() -> isRunning();
     }
+
+    ConsoleManager::destroy(); // Destroy console manager instance before exiting
 
     return 0;
 }

@@ -70,3 +70,5 @@ Testing/
 
 # Visual Studio Files
 .vs/
+/.vs/slnx.sqlite
+/.vs/slnx.sqlite
